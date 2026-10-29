@@ -1,0 +1,9 @@
+node_modules/
+.venv/
+generated/
+__pycache__/
+.DS_Store
+*.blend1
+wall-footprints.json
+merged-wall-slabs.json
+build-stats.json

@@ -1,0 +1,30 @@
+{
+  "kitchen_counter_clear_mm": 960.0,
+  "entry_clear_mm": 1054.0,
+  "dining_west_route_mm": 771.5,
+  "desk_rear_conservative_mm": 749.7,
+  "bed_foot_min_mm": 635.0,
+  "guest_storage_front_mm": 854.0,
+  "kitchen_wall_cabinets": 0,
+  "front_panels_with_inspection_toggle": 58,
+  "triangle_counter_outline_mm": [
+    [
+      3710,
+      3935
+    ],
+    [
+      4380,
+      3935
+    ],
+    [
+      3750,
+      4600
+    ],
+    [
+      3710,
+      4600
+    ]
+  ],
+  "mesh_count": 2168,
+  "embedded_images": 2
+}
