@@ -36,6 +36,7 @@ def mat(name,hex,rough=.55,metal=0,texture=None):
         m.node_tree.links.new(t.outputs['Color'],p.inputs['Base Color'])
     return m
 M={
+ 'fridge_white':mat('冰箱富士白玻璃配色','F1F3F0',.20,.03),
  'wall':mat('暖白矿物涂料','E9E4D7',.82), 'ceiling':mat('顶面暖白','F3EEE4',.85),
  'walnut':mat('柚木色木饰面','965B30',.46,texture='walnut.jpg'), 'oak':mat('温润橡木地板','B38959',.6,texture='oak.jpg'),
  'steel':mat('拉丝不锈钢','B9C1BF',.3,.88),'chrome':mat('抛光管状金属','D2D8D7',.17,.96),
@@ -488,8 +489,9 @@ o=rect('扫地机设备柜检修门',3.35,3.37,.88,1.48,.36,.84,'walnut','Storag
 box('扫地机自动上下水基站',(3.70,1.175,.1445),(.450,.381,.249),'white','Appliances','kitchen',.018)
 cyl('扫地机器人归位',(3.48,1.175,.070),.165,.100,'white','Appliances','kitchen',48)
 rect('扫地机防水托盘',3.38,3.94,.91,1.44,.016,.025,'steel','Appliances','kitchen')
-cabinet('冰箱旁窄拉篮',3.37,3.71,2.23,2.46,.85,'x-','walnut','kitchen',drawers=True)
-rect('窄拉篮台面',3.35,3.97,2.23,2.46,.85,.88,'steel','Furniture','kitchen')
+# Narrow tall pantry in front of the boxed stack, divided for daily / spare items.
+cabinet('冰箱旁窄高柜下区',3.37,3.71,2.23,2.46,1.20,'x-','walnut','kitchen')
+cabinet('冰箱旁窄高柜上区',3.37,3.71,2.23,2.46,2.40,'x-','walnut','kitchen',base=1.20)
 rect('灶侧钢台面',2.08,3.30,.23,.86,.85,.88,'steel','Furniture','kitchen')
 rect('管井前钢台面',3.30,3.97,.62,.86,.85,.88,'steel','Furniture','kitchen')
 rect('窗侧钢台面',3.35,3.99,.86,1.50,.85,.88,'steel','Furniture','kitchen')
@@ -538,10 +540,10 @@ for i in range(12):
     rect('厨房小方砖',xx,xx+.150,.251,.259,zz,zz+.148,'tile','Furniture','kitchen',.002)
 # No wall cabinets or floating shelves over the kitchen worktop.
 # Refrigerator occupies the CAD fridge block on east run.
-rect('冰箱箱体',3.37,3.97,1.51,2.21,0,1.91,'steel','Appliances','kitchen',.035)
+rect('冰箱箱体',3.37,3.97,1.51,2.21,0,1.91,'fridge_white','Appliances','kitchen',.035)
 for y1,y2 in [(1.52,1.855),(1.865,2.20)]:
-    rect('冰箱对开门',3.345,3.37,y1,y2,.04,1.89,'steel','Appliances','kitchen',.014)
-    tube('冰箱把手',[(3.325,(y1+y2)/2,.95),(3.325,(y1+y2)/2,1.42)],.009,'black',room='kitchen')
+    rect('冰箱对开门',3.345,3.37,y1,y2,.04,1.89,'fridge_white','Appliances','kitchen',.014)
+    tube('冰箱把手',[(3.325,(y1+y2)/2,.95),(3.325,(y1+y2)/2,1.42)],.009,'steel',room='kitchen')
 rect('洗碗机箱体',1.82,2.37,1.20,1.78,.10,.82,'steel','Appliances','kitchen')
 rect('洗碗机面板',2.395,2.42,1.20,1.78,.10,.81,'steel','Appliances','kitchen')
 rect('洗碗机黑色控制条',2.422,2.426,1.21,1.77,.73,.79,'black','Appliances','kitchen')
@@ -830,6 +832,7 @@ CAMS={
  '08_玄关通顶柜':camera('08 玄关通顶柜',(3.10,2.78,1.64),(.52,2.80,1.37),22),
  '10_玄关柜内分区':camera('10 玄关柜内分区',(3.10,2.78,1.64),(.52,2.80,1.37),22),
  '09_三角洗手台':camera('09 三角洗手台',(4.96,4.91,1.62),(3.92,4.16,.89),30),
+ '14_厨房高柜与白桃配色':camera('14 厨房高柜与白桃配色',(2.25,2.80,1.40),(3.58,1.95,1.20),24),
  '12_手工桌':camera('12 手工桌',(4.55,6.7,1.55),(5.98,7.78,1.15),22),
  '13_储物柜':camera('13 储物柜',(4.80,4.45,1.45),(6.42,4.76,1.2),22),
  '07_主卫':camera('07 主卫',(8.68,5.56,1.58),(9.00,4.0,1.0),18),
@@ -842,7 +845,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='中古 / 包豪斯 · 手工桌 / 储物柜 / 管道 v7'
+scene['Project']='中古 / 包豪斯 · 厨房窄高柜 / 富士白配色 v8'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'

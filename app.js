@@ -30,6 +30,7 @@ const views={
  plan:{p:[4.9,5.1,18.7],t:[4.9,5.1,0],fov:36,title:'俯视布局',note:'上方为南向窗面。可打开 CAD 线稿，核对家具与墙体平面。',cut:true},
  tv:{p:[2.45,5.70,1.40],t:[.56,7.06,1.0],fov:67,title:'客厅 · 65英寸落地电视',note:'65英寸 16:9 屏幕，中心约高 1120 mm；取消电视柜和茶几，改用黑色落地支架与小型回音壁托盘。'},
  living:{p:[1.12,4.55,1.55],t:[3.2,8.15,1.15],fov:76,title:'客厅 · 双人工位',note:'炭黑皮沙发、木质长桌、管状金属与少量砖红点缀。南侧保留低梁。'},
+ fridge:{p:[2.25,2.80,1.40],t:[3.58,1.95,1.20],fov:76,title:'厨房 · 高柜与白桃配色',note:'冰箱旁改为 2400 mm 窄高柜，上下分区；保留后方包管。冰箱参考东芝大白桃富士白，仅调整配色，外形尺寸沿用概念模型。'},
  robot:{p:[2.66,1.40,1.10],t:[3.75,1.17,.55],fov:80,title:'厨房 · 扫地机设备柜',note:'窗下柜预留自动上下水基站、430 mm 净宽洞口和上方检修门。高亮管道可查看暂定供排水接入。'},
  craft:{p:[4.55,6.7,1.55],t:[5.98,7.78,1.15],fov:75,title:'手工桌 · 小吊柜',note:'桌面 1280 × 560 mm，高 750 mm；上柜深 280 mm，台下留坐姿空间，缝纫机移至此处。'},
  store:{p:[4.80,4.45,1.45],t:[6.42,4.76,1.2],fov:78,title:'封闭储物柜',note:'CAD 围合约 1530 × 850 mm；长边浅层板、双扇柜门。勾选“查看柜内分区”可检查内部。'},
@@ -117,7 +118,7 @@ async function loadModel(){
    const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.name==='透明玻璃'){m.transparent=true;m.opacity=.18;m.depthWrite=false;}m.envMapIntensity=.8;});
   }});
   setView('overview',true);$('loading').hidden=true;$('download').disabled=false;$('walk-start').disabled=false;
-  $('status').textContent='模型已就绪 · v7';window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
+  $('status').textContent='模型已就绪 · v8';window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
  }catch(e){error('模型加载失败，请检查网络后刷新：'+e.message)}
 }
 loadModel();

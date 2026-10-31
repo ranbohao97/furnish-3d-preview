@@ -6,7 +6,7 @@
   "bed_foot_min_mm": 635.0,
   "guest_storage_front_mm": 854.0,
   "kitchen_wall_cabinets": 0,
-  "front_panels_with_inspection_toggle": 78,
+  "front_panels_with_inspection_toggle": 77,
   "triangle_counter_outline_mm": [
     [
       3710,
@@ -113,6 +113,6 @@
   "study_monitors": 1,
   "robot_room": "kitchen",
   "service_meshes": 17,
-  "mesh_count": 2266,
+  "mesh_count": 2262,
   "embedded_images": 2
 }
