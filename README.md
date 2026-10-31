@@ -1,8 +1,8 @@
-# 全屋三维预览 v3
+# 全屋三维预览 v4
 
 [打开在线预览](https://ranbohao97.github.io/furnish-3d-preview/)
 
-交互式全屋概念模型：厨房无吊柜、CAD 三角洗手台、3230 mm 玄关通顶柜（2470 mm 玄关收纳 + 760 mm 餐边区），以及按用途调整的柜内分区。支持 11 个视角、剖切墙体、CAD 叠合、柜内查看、动线净距、截图与 GLB 下载。
+交互式全屋概念模型：厨房无吊柜、CAD 三角洗手台、3230 mm 玄关通顶柜（2470 mm 玄关收纳 + 760 mm 餐边区），以及按用途调整的柜内分区。支持 WASD 第一人称漫游、11 个视角、剖切墙体、CAD 叠合、柜内查看、动线净距、截图与 GLB 下载。
 
 本仓库仅包含预览代码、模型与可复建的几何资料；原始 PDF / DWG、门牌信息、私人文档链接和装修业务资料不公开。
 
@@ -36,11 +36,24 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 MODEL_PYTHON="$PWD/.venv/bin/python" blender -b --python build_model.py
 .venv/bin/python verify_geometry.py
+.venv/bin/python build_navigation.py
 python3 build_entry_elevation.py
+npm test
 npm run build
 ```
 
 会生成 `home-model.glb` 和 `generated/` 中的 Blender 文件及渲染图。默认生成 10 张渲染，耗时比网页构建长。
+
+## 第一人称漫游
+
+点击右上角“进入漫游”，从入户以 1.60 m 视高开始。WASD 行走，鼠标拖动转头，方向键也可转头；支持 Pointer Lock 的浏览器另显示“鼠标自由转头”。Esc 暂停，点击继续恢复；切出页面或窗口失焦会暂停并清除按键。手机支持屏幕方向按钮和拖动转头。可快速定位九个房间、回到入户，退出后恢复原来的视角与图层。
+
+碰撞依据当前 GLB 中 1294 个墙体、柜体、家具等网格的平面投影生成，保留凹墙轮廓；人体半径取 0.20 m，4 cm 网格另留半格对角线裕量。行走高度固定，不模拟楼梯、蹲跳或开门。餐椅当前占位让厨房入口较窄，保守碰撞下不与入户连通，可用房间菜单进入厨房；入户至客厅、卧室、主卫、工位与阳台连通。
+
+- `walkthrough.js`：输入、转头、暂停与模式切换。
+- `navigation.js` / `navigation.test.js`：移动及防穿越检查；`npm test` 运行。
+- `build_navigation.py` / `navigation.json`：从 GLB 重建通行图。更换模型后必须重建；网页构建会校验模型 SHA-256，拒绝使用过期通行图。
+- [Pointer Lock API 说明](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestPointerLock)：通过用户点击启用，不支持时使用拖动转头。
 
 ## GitHub Pages
 
