@@ -10676,7 +10676,7 @@
   "source_dwg": "private-source-plan.dwg",
   "style_source": "Private owner style brief",
   "style_revision": 2312,
-  "design_revision": "65英寸落地电视 v5",
+  "design_revision": "65英寸落地电视 / 无茶几 v6",
   "design_changes": [
     "厨房无吊柜",
     "CAD三角洗手台",
@@ -10689,7 +10689,8 @@
     "3230mm长、2400mm高玄关柜，上方320mm局部吊顶",
     "2470mm鞋包备品+760mm餐边分区",
     "客厅65英寸16:9电视，屏幕中心高1120mm",
-    "取消电视柜，改落地支架及小型回音壁托盘"
+    "取消电视柜，改落地支架及小型回音壁托盘",
+    "取消客厅茶几"
   ],
   "assumptions": [
     "地面构造预留100mm，未获现场确认",

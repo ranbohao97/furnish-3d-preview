@@ -49,6 +49,8 @@ checks['old_tv_cabinet_or_wall_tv']=sum(v['name'].startswith(('电视悬浮矮�
 assert abs(checks['tv_screen_diagonal_inches']-65)<.01 and checks['old_tv_cabinet_or_wall_tv']==0
 lo,hi=bound('电视落地支架底座');checks['tv_stand_base_mm']=[round((hi[i]-lo[i])*1000,1)for i in range(3)]
 assert abs(lo[2]-.025)<.001
+checks['coffee_tables']=sum('茶几'in v['name'] for v in rows)
+assert checks['coffee_tables']==0
 checks['mesh_count']=len(g['meshes']);checks['embedded_images']=len(g.get('images',[]))
 assert checks['kitchen_wall_cabinets']==0
 assert abs(checks['kitchen_counter_clear_mm']-960)<.5

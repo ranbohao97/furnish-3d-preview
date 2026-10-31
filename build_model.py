@@ -403,9 +403,6 @@ for yy,ma in [(6.25,'tan'),(7.85,'ivory')]:
     o=box('沙发抱枕',(2.91,yy,.73),(.20,.40,.38),ma,'Furniture','living',.085);o.rotation_euler.y=-.25
 rect('客厅地毯',.70,2.72,5.99,8.20,.017,.025,'rug','Furniture','living',.015)
 for y in (6.05,8.14):rect('地毯深色边线',.76,2.66,y,y+.018,.026,.028,'black','Furniture','living',0)
-cyl('移动小茶几底盘',(1.69,7.05,.06),.23,.05,'black',room='living')
-cyl('移动小茶几支柱',(1.69,7.05,.24),.026,.35,'chrome',room='living')
-o=cyl('移动椭圆小茶几',(1.69,7.05,.435),.35,.035,'walnut',room='living');o.scale.y=1.3
 # 65-inch 16:9 active screen; frame and freestanding hardware are conceptual.
 TV_DIAGONAL=65*.0254;TV_WIDTH=TV_DIAGONAL*16/math.sqrt(16**2+9**2);TV_HEIGHT=TV_DIAGONAL*9/math.sqrt(16**2+9**2)
 box('65英寸电视机身',(.59,7.06,1.12),(.045,TV_WIDTH+.020,TV_HEIGHT+.020),'black','Furniture','living',.008)
@@ -807,7 +804,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='中古 / 包豪斯 · 65英寸落地电视 v5'
+scene['Project']='中古 / 包豪斯 · 65英寸落地电视 / 无茶几 v6'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'
