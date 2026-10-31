@@ -10676,17 +10676,18 @@
   "source_dwg": "private-source-plan.dwg",
   "style_source": "Private owner style brief",
   "style_revision": 2312,
-  "design_revision": "使用动线优化 v2",
+  "design_revision": "玄关2400mm高柜与局部吊顶 v3",
   "design_changes": [
     "厨房无吊柜",
     "CAD三角洗手台",
-    "低鞋柜及换鞋凳",
     "厨房柜门朝工作通道",
     "三把日常餐椅及一把备用折叠椅",
     "床尾正向挂衣浅柜",
     "修正主卧柜前墙",
     "次卧日床转向",
-    "家政与储物分区"
+    "家政与储物分区",
+    "3230mm长、2400mm高玄关柜，上方320mm局部吊顶",
+    "2470mm鞋包备品+760mm餐边分区"
   ],
   "assumptions": [
     "地面构造预留100mm，未获现场确认",

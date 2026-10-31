@@ -1,12 +1,12 @@
 {
   "kitchen_counter_clear_mm": 960.0,
-  "entry_clear_mm": 1054.0,
+  "entry_clear_mm": 1004.0,
   "dining_west_route_mm": 771.5,
   "desk_rear_conservative_mm": 749.7,
   "bed_foot_min_mm": 635.0,
   "guest_storage_front_mm": 854.0,
   "kitchen_wall_cabinets": 0,
-  "front_panels_with_inspection_toggle": 58,
+  "front_panels_with_inspection_toggle": 83,
   "triangle_counter_outline_mm": [
     [
       3710,
@@ -25,6 +25,70 @@
       4600
     ]
   ],
-  "mesh_count": 2168,
+  "entry_run_height_mm": 2400.0,
+  "entry_run_length_mm": 3230.0,
+  "entry_modules": [
+    {
+      "id": "A",
+      "name": "玄关通顶柜A日常鞋",
+      "y_mm": [
+        1180,
+        1780
+      ],
+      "width_mm": 600,
+      "room": "entry",
+      "use": "底部常穿鞋位；中部日常鞋；顶层换季鞋盒"
+    },
+    {
+      "id": "B",
+      "name": "玄关通顶柜B归家",
+      "y_mm": [
+        1780,
+        2380
+      ],
+      "width_mm": 600,
+      "room": "entry",
+      "use": "下部鞋履；950–1550 高随手凹位含镜面挂钩；上部随身物品"
+    },
+    {
+      "id": "C",
+      "name": "玄关通顶柜C长靴雨伞",
+      "y_mm": [
+        2380,
+        3000
+      ],
+      "width_mm": 620,
+      "room": "entry",
+      "use": "长靴、独立干伞托盘格、可调鞋层与备品"
+    },
+    {
+      "id": "D",
+      "name": "玄关通顶柜D通勤备品",
+      "y_mm": [
+        3000,
+        3650
+      ],
+      "width_mm": 650,
+      "room": "entry",
+      "use": "通勤包与分盒日用品；顶层低频收纳"
+    },
+    {
+      "id": "E",
+      "name": "餐边通顶柜E",
+      "y_mm": [
+        3650,
+        4410
+      ],
+      "width_mm": 760,
+      "room": "dining",
+      "use": "下部餐具移门、浅抽屉；900 高餐边台面；上部杯碟与低频餐具"
+    }
+  ],
+  "entry_soffit_underside_mm": 2400.0,
+  "entry_soffit_drop_mm": 320.0,
+  "sideboard_width_mm": 760,
+  "entry_sideboard_partition_full_height": true,
+  "old_entry_bench_or_low_sideboard": 0,
+  "mesh_count": 2271,
   "embedded_images": 2
 }

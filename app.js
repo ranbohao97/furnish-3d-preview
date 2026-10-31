@@ -31,11 +31,11 @@ const views={
  master:{p:[7.55,6.16,1.60],t:[8.65,8.30,1.10],fov:79,title:'主卧',note:'床尾浅柜采用正向抽拉挂衣；另一组保留长衣区。修正柜前误加墙及床头、梳妆台交叠。'},
  guest:{p:[5.58,3.61,1.55],t:[6.92,2.48,.72],fov:79,title:'弹性次卧',note:'2.0 × 0.9 米日床沿窗墙摆放，释放柜前空间；边几可移动。'},
  bath:{p:[8.68,5.56,1.58],t:[9.00,4.0,1.0],fov:85,title:'主卫',note:'依当前平面保留淋浴与帘隔。旧需求中的浴缸尚未落实到这版图纸。'},
- entry:{p:[2.02,3.30,1.48],t:[.47,1.82,.80],fov:65,title:'玄关 · 换鞋与归家',note:'低鞋柜、开放常穿鞋位、480 mm 换鞋坐面、镜子、挂钩与钥匙托盘。'},
+ entry:{p:[3.10,2.78,1.64],t:[.52,2.80,1.37],fov:65,title:'玄关 · 高柜与吊顶',note:'柜高 2400 mm，上方局部吊顶 320 mm。整排 3230 mm：鞋履、归家随手位、长靴雨伞、通勤备品；餐桌端留 760 mm 餐边区。勾选柜内分区查看。'},
  basin:{p:[4.96,4.91,1.62],t:[3.92,4.16,.89],fov:62,title:'客卫 · 三角洗手台',note:'按 CAD 三角轮廓重建台面与柜体，圆盆嵌入台面；斜面开门避开卫生间入口。'},
  laundry:{p:[3.9,9.3,1.55],t:[5.85,9.3,1.2],fov:70,title:'阳台 · 洗烘',note:'洗烘正面可操作；家政柜按机器归位、长柄工具和日用品分区。'}
 };
-function viewFov(v){return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
+function viewFov(v){if(current==='entry' && host.clientWidth/host.clientHeight<.8)return 100;return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
 function setView(key,instant=false){
  const v=views[key];current=key;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('selected',b.dataset.view===key);b.setAttribute('aria-pressed',b.dataset.view===key)});
  $('view-title').textContent=v.title;$('view-note').textContent=v.note;
@@ -71,7 +71,7 @@ const cadLines=new THREE.LineSegments(cadGeo,new THREE.LineBasicMaterial({color:
 const usageOverlay=new THREE.Group();scene.add(usageOverlay);usageOverlay.visible=false;
 function noteSprite(text,pos){const c=document.createElement('canvas');c.width=640;c.height=100;const ctx=c.getContext('2d');ctx.fillStyle='#f8f5edee';ctx.fillRect(0,0,640,100);ctx.fillStyle='#244739';ctx.font='500 48px sans-serif';ctx.textAlign='center';ctx.fillText(text,320,62);const m=new THREE.SpriteMaterial({map:Object.assign(new THREE.CanvasTexture(c),{colorSpace:THREE.SRGBColorSpace}),depthTest:false,toneMapped:false});const o=new THREE.Sprite(m);o.scale.set(2.2,.344,1);o.position.copy(V(...pos));o.renderOrder=110;usageOverlay.add(o);}
 function dimension(a,b,text){const ps=[V(...a),V(...b)];const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(ps),new THREE.LineBasicMaterial({color:0x486f54,depthTest:false}));line.renderOrder=108;usageOverlay.add(line);noteSprite(text,[(a[0]+b[0])/2,(a[1]+b[1])/2,.32]);}
-dimension([.736,1.8,.06],[1.79,1.8,.06],'玄关净距约 1050 mm');
+dimension([.786,1.8,.06],[1.79,1.8,.06],'玄关净距约 1000 mm');
 dimension([.786,3.7,.06],[1.557,3.7,.06],'入户通路约 770 mm');
 dimension([4.862,7.85,.06],[5.612,7.85,.06],'工位后约 750 mm');
 dimension([6.88,7.2,.06],[7.515,7.2,.06],'床尾最窄约 635 mm');
@@ -101,7 +101,7 @@ async function loadModel(){
    const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.name==='透明玻璃'){m.transparent=true;m.opacity=.18;m.depthWrite=false;}m.envMapIntensity=.8;});
   }});
   setView('overview',true);$('loading').hidden=true;$('download').disabled=false;
-  $('status').textContent='模型已就绪 · v2';window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
+  $('status').textContent='模型已就绪 · v3';window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
  }catch(e){error('模型加载失败，请检查网络后刷新：'+e.message)}
 }
 loadModel();

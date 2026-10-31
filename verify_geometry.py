@@ -15,14 +15,31 @@ def bound(prefix):
  return np.min([v['min']for v in a],axis=0),np.max([v['max']for v in a],axis=0)
 checks={}
 checks['kitchen_counter_clear_mm']=round((bound('窗侧钢台面')[0][0]-bound('岛台不锈钢台面')[1][0])*1000,1)
-checks['entry_clear_mm']=round((1.79-bound(['玄关鞋柜','换鞋凳'])[1][0])*1000,1)
-checks['dining_west_route_mm']=round((bound('日常餐椅')[0][0]-bound(['餐边成品柜','餐边不锈钢台面'])[1][0])*1000,1)
+checks['entry_clear_mm']=round((1.79-bound(['玄关通顶柜','玄关A','玄关B','玄关C','玄关D'])[1][0])*1000,1)
+checks['dining_west_route_mm']=round((bound('日常餐椅')[0][0]-bound(['餐边通顶柜E','餐边E'])[1][0])*1000,1)
 checks['desk_rear_conservative_mm']=round((bound(['家政分区柜门','家政柜门把手'])[0][0]-bound('人体工学椅')[1][0])*1000,1)
 checks['bed_foot_min_mm']=round((bound('主床床架')[0][0]-bound(['床尾浅柜','床尾浅衣柜'])[1][0])*1000,1)
 checks['guest_storage_front_mm']=round((bound('次卧分格收纳柜')[0][1]-bound('次卧日床框架')[1][1])*1000,1)
 checks['kitchen_wall_cabinets']=len([v for v in rows if '吊柜'in v['name'] or '厨房开放层板'in v['name'] or '厨房高柜'in v['name']])
 checks['front_panels_with_inspection_toggle']=sum(bool(v['extras'].get('front_panel'))for v in rows)
 checks['triangle_counter_outline_mm']=[[3710,3935],[4380,3935],[3750,4600],[3710,4600]]
+checks['entry_run_height_mm']=round(bound(['玄关通顶柜','餐边通顶柜E'])[1][2]*1000,1)
+checks['entry_run_length_mm']=round((bound(['玄关通顶柜','餐边通顶柜E'])[1][1]-bound(['玄关通顶柜','餐边通顶柜E'])[0][1])*1000,1)
+checks['entry_modules']=json.loads((r/'entry-storage.json').read_text())['modules']
+for module in checks['entry_modules']:
+ lo,hi=bound(module['name'])
+ assert abs(hi[2]-2.40)<.001 and abs((hi[1]-lo[1])*1000-module['width_mm'])<.5
+lo,hi=bound('玄关柜顶局部吊顶')
+checks['entry_soffit_underside_mm']=round(lo[2]*1000,1)
+checks['entry_soffit_drop_mm']=round((hi[2]-lo[2])*1000,1)
+assert checks['entry_soffit_underside_mm']==2400 and checks['entry_soffit_drop_mm']==320
+checks['sideboard_width_mm']=760
+partition=[v for v in rows if v['name'].startswith('餐边通顶柜E通顶侧板') and abs(v['min'][1]-3.65)<.001]
+checks['entry_sideboard_partition_full_height']=any(v['min'][2]<=.081 and v['max'][2]>=2.379 for v in partition)
+assert checks['entry_sideboard_partition_full_height']
+checks['old_entry_bench_or_low_sideboard']=sum(v['name'].startswith(('换鞋凳','餐边成品柜','玄关鞋柜')) for v in rows)
+assert checks['old_entry_bench_or_low_sideboard']==0
+assert checks['entry_run_height_mm']==2400 and checks['entry_run_length_mm']==3230
 checks['mesh_count']=len(g['meshes']);checks['embedded_images']=len(g.get('images',[]))
 assert checks['kitchen_wall_cabinets']==0
 assert abs(checks['kitchen_counter_clear_mm']-960)<.5

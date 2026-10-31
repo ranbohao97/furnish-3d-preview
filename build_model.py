@@ -5,7 +5,7 @@ from mathutils import Vector
 from mathutils.geometry import tessellate_polygon
 
 ROOT=Path(__file__).resolve().parent
-(ROOT/'generated').mkdir(exist_ok=True)
+OUTPUT=Path(os.environ.get('MODEL_OUTPUT_DIR',ROOT/'generated'));OUTPUT.mkdir(parents=True,exist_ok=True)
 D=json.loads((ROOT/'model-data.json').read_text())
 random.seed(603)
 bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
@@ -298,23 +298,97 @@ door('客卫折叠门B',(4.93,3.56),.39,math.radians(130),'blue',2.14,'guestbath
 door('主卧折叠门下叶',(5.61,5.94),.50,math.radians(8),'walnut',2.18,'master')
 door('主卧折叠门上叶',(5.61,6.94),.50,math.radians(-8),'walnut',2.18,'master')
 
-# Entry and dining storage, retaining the plan's long, shallow west wall run.
-# Entry: 600 mm bench + 640 mm shoe cabinet, no full-height solid block.
-cabinet('玄关鞋柜',.32,.69,1.81,2.45,1.05,'x+','walnut','entry',base=.20)
-rect('换鞋凳座板',.32,.72,1.18,1.78,.415,.445,'walnut','Storage','entry')
-rect('换鞋软坐垫',.34,.70,1.20,1.76,.445,.48,'ivory','Furniture','entry',.025)
-for yy in (1.18,1.76):rect('换鞋凳侧腿',.34,.68,yy,yy+.02,.03,.415,'walnut','Storage','entry')
-rect('换鞋凳鞋层板',.34,.68,1.20,1.76,.18,.20,'steel','Storage','entry')
-for yy in (1.35,1.59,1.98,2.20):
- for dy in (-.045,.045):
-  for z in ([.25] if yy<1.8 else [.27,.51,.79]):
-   sphere('常穿鞋',( .53,yy+dy,z),(.145,.04,.045),'tan','Storage','entry')
-rect('玄关随手托盘',.38,.64,1.99,2.30,1.05,1.075,'steel','Decor','entry')
-box('玄关钥匙碗',(.52,2.13,1.095),(.12,.12,.025),'blue','Decor','entry',.015)
-box('玄关半身镜',(.325,1.48,1.40),(.018,.46,.72),'mirror','Furniture','entry',.025)
-for yy in (1.98,2.20,2.36):tube('玄关挂钩',[(.33,yy,1.63),(.40,yy,1.63),(.40,yy,1.66)],.008,'chrome','Storage','entry')
-cabinet('餐边成品柜',.32,.74,2.50,4.41,.88,'x+','walnut','dining')
-rect('餐边不锈钢台面',.30,.77,2.48,4.43,.88,.905,'steel','Furniture','dining')
+# Continuous 3230 mm west-wall run: 2470 mm entry + 760 mm dining.
+# 2400 mm cabinet includes a 20 mm scribe; local ceiling drops 320 mm above.
+ENTRY_ZONES=json.loads((ROOT/'entry-storage.json').read_text())
+def entry_part(name,x1,x2,y1,y2,z1,z2,material='walnut',room='entry',front=False):
+    o=rect(name,x1,x2,y1,y2,z1,z2,material,'Storage',room,.002,'Owner revision 2026-10-31 / concept dimensions')
+    if front:o['front_panel']=True
+    return o
+def entry_shelf(name,a,b,z,room='entry'):
+    return entry_part(name+'层板',.338,.705,a+.018,b-.018,z,z+.018,'ivory',room)
+def entry_front(name,a,b,z0,z1,room='entry',sliding=False):
+    # Two narrow leaves; dining lower storage uses bypass doors to avoid swing.
+    for i in range(2):
+        lo=a+i*(b-a)/2+.003;hi=a+(i+1)*(b-a)/2-.003
+        xx=.740+(.020*i if sliding else 0)
+        o=entry_part(name+('移门' if sliding else '柜门'),xx,xx+.018,lo,hi,z0+.006,z1-.006,room=room,front=True)
+        o['opening']='sliding' if sliding else 'hinged';o['zone']=name
+        # Handle stays within the existing 786 mm front envelope.
+        yy=(lo+hi)/2;zz=max(z0+.10,min(z1-.10,1.12))
+        if sliding:
+            entry_part(name+'柜门拉手',xx+.018,xx+.025,yy-.045,yy+.045,zz-.012,zz+.012,'black',room)
+        else:tube(name+'柜门拉手',[(.779,yy-.065,zz),(.779,yy+.065,zz)],.007,'chrome','Storage',room)
+for zone in ENTRY_ZONES['modules']:
+    name=zone['name'];a,b=[v/1000 for v in zone['y_mm']];room=zone['room']
+    for yy in (a,b-.018):entry_part(name+'通顶侧板',.338,.740,yy,yy+.018,.08,2.38,room=room)
+    entry_part(name+'封闭背板',.320,.338,a,b,.08,2.38,room=room)
+    for zz in (.08,1.982,2.362):entry_part(name+'固定横板',.338,.740,a+.018,b-.018,zz,zz+.018,room=room)
+    entry_part(name+'内退踢脚',.640,.658,a+.018,b-.018,.02,.08,room=room)
+    entry_part(name+'到顶收口',.320,.758,a,b,2.38,2.40,room=room)
+    entry_front(name+'顶层低频收纳',a,b,2.00,2.38,room)
+    # Separate closed boxes for seasonal shoes/bags, all above normal reach.
+    box(name+'顶层收纳盒',(.51,(a+b)/2,2.18),(.30,b-a-.10,.28),'tan','Storage',room,.012)
+# A: frequently worn shoes, bottom open slot; shoes lie perpendicular to front.
+a,b=1.18,1.78
+for z in (.25,.48,.71,.94,1.17,1.40,1.63,1.86):entry_shelf('玄关A鞋履',a,b,z)
+entry_front('玄关A日常鞋下区',a,b,.25,1.05);entry_front('玄关A日常鞋上区',a,b,1.05,1.98)
+for yy in (1.34,1.60):
+ for dy in (-.046,.046):
+  for z in (.14,.32,.55,1.24,1.70):sphere('玄关A鞋履',(.52,yy+dy,z),(.145,.04,.045),'tan','Storage','entry')
+# B: keys, small bags and mirror niche at standing reach, shoes below.
+a,b=1.78,2.38
+for z in (.31,.55,.79,.95,1.532,1.82):entry_shelf('玄关B归家',a,b,z)
+entry_front('玄关B鞋履下柜',a,b,.08,.95);entry_front('玄关B随身物品上柜',a,b,1.55,1.98)
+entry_part('玄关B随手凹位台面',.338,.758,a+.018,b-.018,.95,.97,'steel')
+rect('玄关B镜面背板',.340,.350,1.84,2.32,1.00,1.48,'mirror','Decor','entry',.002)
+rect('玄关B钥匙托盘',.48,.68,1.95,2.18,.97,.986,'steel','Decor','entry',.01)
+box('玄关B钥匙碗',(.57,2.07,1.01),(.12,.12,.04),'blue','Decor','entry',.015)
+for yy in (1.87,2.28):tube('玄关B挂钩',[(.355,yy,1.38),(.405,yy,1.38),(.405,yy,1.41)],.007,'chrome','Storage','entry')
+entry_part('玄关B凹位灯带',.68,.70,1.82,2.34,1.518,1.527,'lamp')
+# C: 420 mm main bay for boots + adjustable shoes, 164 mm dry umbrella bay.
+a,b=2.38,3.00
+entry_part('玄关C雨伞独立竖隔',.338,.71,2.80,2.818,.098,1.18,'ivory')
+for z in (.63,.88):entry_shelf('玄关C长靴鞋履',a,2.80,z)
+for z in (1.16,1.47,1.80):entry_shelf('玄关C鞋履备品',a,b,z)
+entry_front('玄关C长靴雨伞区',a,b,.08,1.16);entry_front('玄关C换季鞋区',a,b,1.16,1.98)
+entry_part('玄关C雨伞沥水托盘',.37,.68,2.84,2.96,.10,.125,'steel')
+for yy in (2.48,2.64):
+    box('玄关C长靴筒',(.49,yy,.34),(.12,.10,.38),'black','Storage','entry',.018)
+    box('玄关C长靴鞋头',(.56,yy,.16),(.27,.10,.10),'black','Storage','entry',.025)
+for yy in (2.87,2.93):
+    cyl('玄关C收拢雨伞',(.51,yy,.53),.018,.78,'green','Storage','entry')
+    tube('玄关C雨伞弯柄',[(.51,yy,.92),(.51,yy,1.00),(.56,yy,1.00),(.56,yy,.96)],.007,'black','Storage','entry')
+# D: bags and boxed household supplies; no impractical sideways clothes rail.
+a,b=3.00,3.65
+for z in (.55,1.02,1.49):entry_shelf('玄关D通勤备品',a,b,z)
+entry_front('玄关D通勤包下区',a,b,.08,1.02);entry_front('玄关D日用备品上区',a,b,1.02,1.98)
+for yy,z in [(3.18,.30),(3.46,.77)]:
+    box('玄关D通勤包',(.51,yy,z),(.27,.23,.35),'green','Storage','entry',.025)
+    tube('玄关D包提手',[(.51,yy-.06,z+.17),(.51,yy-.06,z+.24),(.51,yy+.06,z+.24),(.51,yy+.06,z+.17)],.009,'black','Storage','entry')
+for z in (1.18,1.65):box('玄关D日用备品盒',(.51,3.31,z),(.30,.48,.24),'ivory','Storage','entry',.008)
+# E: a small food-only zone; solid full-height panels separate it from shoes.
+a,b=3.65,4.41
+for z in (.35,.63,1.532,1.82):entry_shelf('餐边E独立收纳',a,b,z,'dining')
+entry_front('餐边E下部餐具移门',a,b,.08,.63,'dining',sliding=True)
+# One shallow cutlery drawer: actual tray and a removable front.
+entry_part('餐边E餐具抽屉底',.37,.70,a+.045,b-.045,.66,.675,'ivory','dining')
+for yy in (a+.045,b-.057):entry_part('餐边E餐具抽屉侧',.37,.70,yy,yy+.012,.675,.83,'ivory','dining')
+entry_part('餐边E餐具抽屉后挡',.37,.382,a+.045,b-.045,.675,.83,'ivory','dining')
+entry_part('餐边E餐具抽屉面',.74,.758,a+.003,b-.003,.64,.875,room='dining',front=True)
+tube('餐边E餐具抽屉拉手',[(.779,3.94,.81),(.779,4.12,.81)],.007,'chrome','Storage','dining')
+entry_part('餐边E不锈钢台面',.338,.758,a+.018,b-.018,.88,.90,'steel','dining')
+entry_front('餐边E杯碟上柜',a,b,1.55,1.98,'dining')
+entry_part('餐边E凹位灯带',.68,.70,3.70,4.36,1.518,1.527,'lamp','dining')
+# Everyday serving objects stay entirely within the 420 mm deep niche.
+rect('餐边E托盘',.40,.69,3.78,4.22,.90,.918,'walnut','Decor','dining',.012)
+for yy in (3.87,4.06):
+    cyl('餐边E水杯',(.53,yy,.973),.038,.11,'white','Decor','dining')
+    cyl('餐边E杯口',(.53,yy,1.030),.031,.004,'grout','Decor','dining')
+for z in (.374,.386,.398):cyl('餐边E餐盘',(.52,4.00,z),.13,.012,'white','Storage','dining')
+for yy in (3.84,4.11):cyl('餐边E备用杯',(.51,yy,1.90),.045,.12,'white','Storage','dining')
+# Local plasterboard bulkhead joins the 2400 mm cabinet to the assumed 2720 mm ceiling.
+rect('玄关柜顶局部吊顶',.31,.82,1.18,4.41,2.40,H,'ceiling','Ceiling','entry')
 cabinet('客厅杂物低柜',.32,.67,4.50,5.80,.58,'x+','walnut','living',drawers=True)
 cabinet('电视悬浮矮柜',.32,.64,6.32,8.05,.58,'x+','walnut','living',base=.30)
 # Sofa faces west, with two full-sized seats, armrests, piping and cushions.
@@ -667,13 +741,13 @@ def plant(name,x,y,scale=1):
         tube(name+'茎',[(x,y,.34*scale),(ex,ey,h)],.005*scale,'leaf','Decor')
         o=sphere(name+'叶',(ex,ey,h),(.13*scale,.055*scale,.22*scale),'leaf','Decor');o.rotation_euler=(.5,math.sin(a)*.6,a)
 plant('窗边绿植',1.16,8.98,.85)
-plant('餐边绿植',.57,4.22,.42)
+# Old floor plant in the new tall-cabinet footprint removed.
 # restrained Bauhaus art at west dining wall, physically modelled geometry.
 box('几何画木框',(.335,4.90,1.58),(.04,.63,.78),'walnut','Decor',bevel=.004)
 box('几何画底纸',(.358,4.90,1.58),(.008,.59,.74),'ivory','Decor',bevel=0)
 o=cyl('画作红圆',(.364,4.84,1.70),.17,.006,'red','Decor',vertices=48,rot=(0,math.pi/2,0))
 box('画作蓝方',(.367,5.01,1.45),(.007,.24,.25),'blue','Decor',bevel=0)
-for i in range(5):box('餐边书籍',(.52,3.15+i*.055,.96),(.23,.04,.12),['black','red','ivory','blue','green'][i],'Decor',bevel=.001)
+# Old countertop books removed with the former low sideboard.
 cyl('餐桌花瓶',(2.47,3.70,.88),.055,.19,'white','Decor')
 tube('花枝',[(2.47,3.70,.9),(2.44,3.71,1.15)],.003,'leaf','Decor')
 for i in range(3):sphere('小花',(2.44+i*.025,3.71,1.15+i*.02),(.025,.025,.025),'orange','Decor')
@@ -709,7 +783,8 @@ CAMS={
  '04_主卧':camera('04 主卧',(7.55,6.16,1.60),(8.65,8.30,1.10),22),
  '05_次卧':camera('05 次卧',(5.58,3.61,1.55),(6.92,2.48,.72),22),
  '06_全屋俯视':camera('06 全屋俯视',(4.95,5.10,18),(4.95,5.10,0),ortho=11.5),
- '08_玄关鞋柜':camera('08 玄关鞋柜',(2.02,3.30,1.48),(.47,1.82,.80),25),
+ '08_玄关通顶柜':camera('08 玄关通顶柜',(3.10,2.78,1.64),(.52,2.80,1.37),22),
+ '10_玄关柜内分区':camera('10 玄关柜内分区',(3.10,2.78,1.64),(.52,2.80,1.37),22),
  '09_三角洗手台':camera('09 三角洗手台',(4.96,4.91,1.62),(3.92,4.16,.89),30),
  '07_主卫':camera('07 主卫',(8.68,5.56,1.58),(9.00,4.0,1.0),18),
 }
@@ -721,13 +796,13 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='中古 / 包豪斯 · 使用动线优化 v2'
+scene['Project']='中古 / 包豪斯 · 玄关通顶分区 v3'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'
 for name,o in CAMS.items():o['view_label']=name
 # Export complete geometry; curves are converted to mesh for portable GLB.
-bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'generated/全屋模型.blend'))
+bpy.ops.wm.save_as_mainfile(filepath=str(OUTPUT/'全屋模型.blend'))
 bpy.ops.object.select_all(action='DESELECT')
 curves=[o for o in bpy.data.objects if o.type=='CURVE']
 for o in curves:o.select_set(True)
@@ -735,7 +810,10 @@ if curves:
     bpy.context.view_layer.objects.active=curves[0];bpy.ops.object.convert(target='MESH')
 bpy.ops.export_scene.gltf(filepath=str(ROOT/'home-model.glb'),export_format='GLB',export_extras=True,export_cameras=False,export_lights=False,export_apply=True,export_yup=True)
 print('MODEL_SAVED',len(bpy.data.objects),flush=True)
-for name in ['01_全屋轴测','06_全屋俯视','02_客厅与双人工位','03_餐厨','04_主卧','05_次卧','07_主卫','08_玄关鞋柜','09_三角洗手台']:
+render_views=os.environ.get('MODEL_RENDER_VIEWS','01_全屋轴测,06_全屋俯视,02_客厅与双人工位,03_餐厨,04_主卧,05_次卧,07_主卫,08_玄关通顶柜,09_三角洗手台,10_玄关柜内分区').split(',')
+for name in filter(None,render_views):
+    for o in bpy.data.objects:
+        if o.get('room') in ('entry','dining') and (o.get('front_panel') or '柜门拉手' in o.name or '抽屉拉手' in o.name):o.hide_render=name.startswith('10')
     overview=name.startswith(('01','06'))
     for cat in ['WallsUpper','Ceiling','Windows','Curtains']:
         if cat in COL:COL[cat].hide_render=overview
@@ -745,9 +823,11 @@ for name in ['01_全屋轴测','06_全屋俯视','02_客厅与双人工位','03_
     if name.startswith('06'):
         scene.render.resolution_x=1300;scene.render.resolution_y=1400
     else:scene.render.resolution_x=1400;scene.render.resolution_y=1100
-    scene.render.filepath=str(ROOT/'generated'/f'{name}.png')
+    scene.render.filepath=str(OUTPUT/f'{name}.png')
     bpy.ops.render.render(write_still=True)
     print('RENDERED',name,flush=True)
+for o in bpy.data.objects:
+    if o.get('room') in ('entry','dining'):o.hide_render=False
 # Save a friendly default dollhouse view, with full-height model in collections.
 for cat in ['WallsUpper','Ceiling','Windows','Curtains','BathroomWalls']:
     COL[cat].hide_render=True
@@ -756,6 +836,6 @@ for screen in bpy.data.screens:
     for a in screen.areas:
         if a.type=='VIEW_3D':
             a.spaces.active.region_3d.view_perspective='CAMERA'
-bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'generated/全屋模型.blend'))
+bpy.ops.wm.save_as_mainfile(filepath=str(OUTPUT/'全屋模型.blend'))
 (ROOT/'build-stats.json').write_text(json.dumps({'objects':len(bpy.data.objects),'meshes':len(bpy.data.meshes),'materials':len(bpy.data.materials),'collections':{k:len(v.objects)for k,v in COL.items()},'cameras':list(CAMS)},ensure_ascii=False,indent=2))
 print('DONE',flush=True)
