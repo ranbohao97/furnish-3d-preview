@@ -40,6 +40,15 @@ assert checks['entry_sideboard_partition_full_height']
 checks['old_entry_bench_or_low_sideboard']=sum(v['name'].startswith(('换鞋凳','餐边成品柜','玄关鞋柜')) for v in rows)
 assert checks['old_entry_bench_or_low_sideboard']==0
 assert checks['entry_run_height_mm']==2400 and checks['entry_run_length_mm']==3230
+lo,hi=bound('65英寸电视屏幕')
+checks['tv_screen_width_mm']=round((hi[1]-lo[1])*1000,1)
+checks['tv_screen_height_mm']=round((hi[2]-lo[2])*1000,1)
+checks['tv_screen_diagonal_inches']=round(float(np.hypot(hi[1]-lo[1],hi[2]-lo[2])/.0254),3)
+checks['tv_center_height_mm']=round((hi[2]+lo[2])*500,1)
+checks['old_tv_cabinet_or_wall_tv']=sum(v['name'].startswith(('电视悬浮矮柜','壁挂电视'))for v in rows)
+assert abs(checks['tv_screen_diagonal_inches']-65)<.01 and checks['old_tv_cabinet_or_wall_tv']==0
+lo,hi=bound('电视落地支架底座');checks['tv_stand_base_mm']=[round((hi[i]-lo[i])*1000,1)for i in range(3)]
+assert abs(lo[2]-.025)<.001
 checks['mesh_count']=len(g['meshes']);checks['embedded_images']=len(g.get('images',[]))
 assert checks['kitchen_wall_cabinets']==0
 assert abs(checks['kitchen_counter_clear_mm']-960)<.5

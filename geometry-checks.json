@@ -6,7 +6,7 @@
   "bed_foot_min_mm": 635.0,
   "guest_storage_front_mm": 854.0,
   "kitchen_wall_cabinets": 0,
-  "front_panels_with_inspection_toggle": 83,
+  "front_panels_with_inspection_toggle": 79,
   "triangle_counter_outline_mm": [
     [
       3710,
@@ -89,6 +89,16 @@
   "sideboard_width_mm": 760,
   "entry_sideboard_partition_full_height": true,
   "old_entry_bench_or_low_sideboard": 0,
-  "mesh_count": 2271,
+  "tv_screen_width_mm": 1439.0,
+  "tv_screen_height_mm": 809.4,
+  "tv_screen_diagonal_inches": 65.0,
+  "tv_center_height_mm": 1120.0,
+  "old_tv_cabinet_or_wall_tv": 0,
+  "tv_stand_base_mm": [
+    540.0,
+    820.0,
+    25.0
+  ],
+  "mesh_count": 2265,
   "embedded_images": 2
 }

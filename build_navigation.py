@@ -28,7 +28,7 @@ for i,n in enumerate(g['nodes']):
  transform=world(i);polys=[]
  for p in g['meshes'][n['mesh']]['primitives']:
   v=accessor(p['attributes']['POSITION']);v=v@transform[:3,:3].T+transform[:3,3]
-  if v[:,1].max()<.12 or v[:,1].min()>1.85:continue
+  if (v[:,1].max()<.12 and n['name']!='电视落地支架底座') or v[:,1].min()>1.85:continue
   indices=accessor(p['indices']).ravel() if 'indices'in p else np.arange(len(v))
   # Full projection of each overlapping mesh preserves concave wall outlines.
   tri=v[indices.reshape(-1,3)][:,:,[0,2]];tri[:,:,1]*=-1

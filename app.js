@@ -28,6 +28,7 @@ const V=(x,y,z)=>new THREE.Vector3(x,z,-y);
 const views={
  overview:{p:[-5.8,-8.0,12.3],t:[4.7,5.2,.4],fov:43,title:'全屋轴测',note:'剖切墙体，查看客餐厨、双人工位与卧室之间的关系。',cut:true},
  plan:{p:[4.9,5.1,18.7],t:[4.9,5.1,0],fov:36,title:'俯视布局',note:'上方为南向窗面。可打开 CAD 线稿，核对家具与墙体平面。',cut:true},
+ tv:{p:[2.45,5.70,1.40],t:[.56,7.06,1.0],fov:67,title:'客厅 · 65英寸落地电视',note:'65英寸 16:9 屏幕，中心约高 1120 mm；取消电视柜，改用黑色落地支架与小型回音壁托盘。'},
  living:{p:[1.12,4.55,1.55],t:[3.2,8.15,1.15],fov:76,title:'客厅 · 双人工位',note:'炭黑皮沙发、木质长桌、管状金属与少量砖红点缀。南侧保留低梁。'},
  kitchen:{p:[3.05,5.20,1.60],t:[2.20,1.55,1.08],fov:73,title:'餐厅 · 厨房',note:'无吊柜；水槽柜朝工作通道开启。900 mm 餐桌向东调整，西侧留入户通路。'},
  study:{p:[5.10,5.11,1.55],t:[3.8,7.7,1.1],fov:75,title:'双人工位',note:'长桌同时容纳两套电脑及缝纫设备，半高隔板与客厅保持联系。'},
@@ -105,7 +106,7 @@ async function loadModel(){
    const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.name==='透明玻璃'){m.transparent=true;m.opacity=.18;m.depthWrite=false;}m.envMapIntensity=.8;});
   }});
   setView('overview',true);$('loading').hidden=true;$('download').disabled=false;$('walk-start').disabled=false;
-  $('status').textContent='模型已就绪 · v4';window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
+  $('status').textContent='模型已就绪 · v5';window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
  }catch(e){error('模型加载失败，请检查网络后刷新：'+e.message)}
 }
 loadModel();

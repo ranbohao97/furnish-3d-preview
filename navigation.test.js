@@ -28,3 +28,7 @@ test('entry connects to living, bedrooms, study and balcony; kitchen shortcut is
  for(const key of ['living','study','master','guest','bath','basin','laundry']){const p=nav.starts[key];assert.ok(seen.has(`${Math.floor(p.x/nav.step)},${Math.floor(p.y/nav.step)}`),key);}
  assert.equal(nav.starts.kitchen.connectedToEntry,false);
 });
+
+test('floor TV stand base remains an obstacle despite its low height',()=>{
+ assert.equal(isWalkable(nav,1.0,7.40),false);
+});

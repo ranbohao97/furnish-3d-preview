@@ -390,7 +390,6 @@ for yy in (3.84,4.11):cyl('餐边E备用杯',(.51,yy,1.90),.045,.12,'white','Sto
 # Local plasterboard bulkhead joins the 2400 mm cabinet to the assumed 2720 mm ceiling.
 rect('玄关柜顶局部吊顶',.31,.82,1.18,4.41,2.40,H,'ceiling','Ceiling','entry')
 cabinet('客厅杂物低柜',.32,.67,4.50,5.80,.58,'x+','walnut','living',drawers=True)
-cabinet('电视悬浮矮柜',.32,.64,6.32,8.05,.58,'x+','walnut','living',base=.30)
 # Sofa faces west, with two full-sized seats, armrests, piping and cushions.
 box('沙发底座',(2.94,7.06,.28),(.89,2.43,.25),'black','Furniture','living',.055)
 box('沙发靠背',(3.31,7.06,.65),(.19,2.45,.60),'leather','Furniture','living',.085)
@@ -407,9 +406,20 @@ for y in (6.05,8.14):rect('地毯深色边线',.76,2.66,y,y+.018,.026,.028,'blac
 cyl('移动小茶几底盘',(1.69,7.05,.06),.23,.05,'black',room='living')
 cyl('移动小茶几支柱',(1.69,7.05,.24),.026,.35,'chrome',room='living')
 o=cyl('移动椭圆小茶几',(1.69,7.05,.435),.35,.035,'walnut',room='living');o.scale.y=1.3
-box('壁挂电视',( .365,7.28,1.30),(.05,1.47,.84),'black','Furniture','living',.012)
-box('电视屏幕',(.394,7.28,1.30),(.009,1.43,.80),'screen','Furniture','living',.004)
-box('回音壁',(.49,7.28,.615),(.09,.95,.065),'black','Furniture','living',.02)
+# 65-inch 16:9 active screen; frame and freestanding hardware are conceptual.
+TV_DIAGONAL=65*.0254;TV_WIDTH=TV_DIAGONAL*16/math.sqrt(16**2+9**2);TV_HEIGHT=TV_DIAGONAL*9/math.sqrt(16**2+9**2)
+box('65英寸电视机身',(.59,7.06,1.12),(.045,TV_WIDTH+.020,TV_HEIGHT+.020),'black','Furniture','living',.008)
+box('65英寸电视屏幕',(.615,7.06,1.12),(.006,TV_WIDTH,TV_HEIGHT),'screen','Furniture','living',.002)
+# Low weighted steel plate, central cable column and rear mounting rails.
+rect('电视落地支架底座',.33,.87,6.65,7.47,.025,.050,'black','Furniture','living',.018)
+rect('电视落地支架立柱',.485,.545,7.02,7.10,.050,1.28,'black','Furniture','living',.008)
+for zz in (1.02,1.22):rect('电视落地支架横梁',.540,.574,6.77,7.35,zz,zz+.03,'black','Furniture','living',.004)
+for yy in (6.88,7.22):rect('电视落地支架背挂臂',.55,.574,yy,yy+.035,.94,1.31,'black','Furniture','living',.003)
+# Retain the soundbar on a small support attached to the stand, not floating.
+rect('电视支架回音壁托盘',.54,.69,6.55,7.57,.595,.6075,'black','Furniture','living',.004)
+for yy in (6.84,7.28):tube('电视支架托盘撑',[(.52,7.06,.50),(.61,yy,.595)],.012,'black','Furniture','living')
+box('回音壁',(.625,7.06,.640),(.09,.95,.065),'black','Furniture','living',.014)
+tube('电视支架背部理线',[(.568,7.08,1.12),(.474,7.08,1.05),(.474,7.08,.08),(.34,7.08,.06)],.006,'black','Furniture','living')
 # Double desk and perforated-height divider behind the sofa.
 rect('沙发后半高隔板',3.47,3.59,6.99,8.70,0,1.18,'walnut','Storage','study',.008)
 rect('双人工位长桌',3.61,4.25,5.72,8.60,.735,.775,'walnut','Furniture','study',.012)
@@ -779,6 +789,7 @@ def camera(name,loc,target,lens=24,ortho=None):
 CAMS={
  '01_全屋轴测':camera('01 全屋轴测',(-9,-12,16),(4.7,5.2,.4),ortho=15.8),
  '02_客厅与双人工位':camera('02 客厅与双人工位',(1.12,4.55,1.55),(3.2,8.15,1.15),23),
+ '11_65英寸电视支架':camera('11 65英寸电视支架',(2.45,5.70,1.40),(.56,7.06,1.0),25),
  '03_餐厨':camera('03 餐厨',(3.05,5.20,1.60),(2.20,1.55,1.08),24),
  '04_主卧':camera('04 主卧',(7.55,6.16,1.60),(8.65,8.30,1.10),22),
  '05_次卧':camera('05 次卧',(5.58,3.61,1.55),(6.92,2.48,.72),22),
@@ -796,7 +807,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='中古 / 包豪斯 · 玄关通顶分区 v3'
+scene['Project']='中古 / 包豪斯 · 65英寸落地电视 v5'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'
@@ -810,7 +821,7 @@ if curves:
     bpy.context.view_layer.objects.active=curves[0];bpy.ops.object.convert(target='MESH')
 bpy.ops.export_scene.gltf(filepath=str(ROOT/'home-model.glb'),export_format='GLB',export_extras=True,export_cameras=False,export_lights=False,export_apply=True,export_yup=True)
 print('MODEL_SAVED',len(bpy.data.objects),flush=True)
-render_views=os.environ.get('MODEL_RENDER_VIEWS','01_全屋轴测,06_全屋俯视,02_客厅与双人工位,03_餐厨,04_主卧,05_次卧,07_主卫,08_玄关通顶柜,09_三角洗手台,10_玄关柜内分区').split(',')
+render_views=os.environ.get('MODEL_RENDER_VIEWS','01_全屋轴测,06_全屋俯视,02_客厅与双人工位,03_餐厨,04_主卧,05_次卧,07_主卫,08_玄关通顶柜,09_三角洗手台,10_玄关柜内分区,11_65英寸电视支架').split(',')
 for name in filter(None,render_views):
     for o in bpy.data.objects:
         if o.get('room') in ('entry','dining') and (o.get('front_panel') or '柜门拉手' in o.name or '抽屉拉手' in o.name):o.hide_render=name.startswith('10')
