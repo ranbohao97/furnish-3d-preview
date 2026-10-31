@@ -30,14 +30,17 @@ const views={
  plan:{p:[4.9,5.1,18.7],t:[4.9,5.1,0],fov:36,title:'俯视布局',note:'上方为南向窗面。可打开 CAD 线稿，核对家具与墙体平面。',cut:true},
  tv:{p:[2.45,5.70,1.40],t:[.56,7.06,1.0],fov:67,title:'客厅 · 65英寸落地电视',note:'65英寸 16:9 屏幕，中心约高 1120 mm；取消电视柜和茶几，改用黑色落地支架与小型回音壁托盘。'},
  living:{p:[1.12,4.55,1.55],t:[3.2,8.15,1.15],fov:76,title:'客厅 · 双人工位',note:'炭黑皮沙发、木质长桌、管状金属与少量砖红点缀。南侧保留低梁。'},
- kitchen:{p:[3.05,5.20,1.60],t:[2.20,1.55,1.08],fov:73,title:'餐厅 · 厨房',note:'无吊柜；水槽柜朝工作通道开启。900 mm 餐桌向东调整，西侧留入户通路。'},
- study:{p:[5.10,5.11,1.55],t:[3.8,7.7,1.1],fov:75,title:'双人工位',note:'长桌同时容纳两套电脑及缝纫设备，半高隔板与客厅保持联系。'},
+ robot:{p:[2.66,1.40,1.10],t:[3.75,1.17,.55],fov:80,title:'厨房 · 扫地机设备柜',note:'窗下柜预留自动上下水基站、430 mm 净宽洞口和上方检修门。高亮管道可查看暂定供排水接入。'},
+ craft:{p:[4.55,6.7,1.55],t:[5.98,7.78,1.15],fov:75,title:'手工桌 · 小吊柜',note:'桌面 1280 × 560 mm，高 750 mm；上柜深 280 mm，台下留坐姿空间，缝纫机移至此处。'},
+ store:{p:[4.80,4.45,1.45],t:[6.42,4.76,1.2],fov:78,title:'封闭储物柜',note:'CAD 围合约 1530 × 850 mm；长边浅层板、双扇柜门。勾选“查看柜内分区”可检查内部。'},
+ kitchen:{p:[3.05,5.20,1.60],t:[2.20,1.55,1.08],fov:73,title:'餐厅 · 厨房',note:'无吊柜；水龙头按 CAD 调整至餐厅侧，操作面朝厨房。扫地机移入窗下设备柜，预留上下水与检修口。'},
+ study:{p:[5.10,5.11,1.55],t:[3.8,7.7,1.1],fov:75,title:'双人工位',note:'靠下工位仅放笔记本，上侧保留显示器；沙发背后为带透光窗的装饰隔断，缝纫机移至手工桌。'},
  master:{p:[7.55,6.16,1.60],t:[8.65,8.30,1.10],fov:79,title:'主卧',note:'床尾浅柜采用正向抽拉挂衣；另一组保留长衣区。修正柜前误加墙及床头、梳妆台交叠。'},
  guest:{p:[5.58,3.61,1.55],t:[6.92,2.48,.72],fov:79,title:'弹性次卧',note:'2.0 × 0.9 米日床沿窗墙摆放，释放柜前空间；边几可移动。'},
  bath:{p:[8.68,5.56,1.58],t:[9.00,4.0,1.0],fov:85,title:'主卫',note:'依当前平面保留淋浴与帘隔。旧需求中的浴缸尚未落实到这版图纸。'},
  entry:{p:[3.10,2.78,1.64],t:[.52,2.80,1.37],fov:65,title:'玄关 · 高柜与吊顶',note:'柜高 2400 mm，上方局部吊顶 320 mm。整排 3230 mm：鞋履、归家随手位、长靴雨伞、通勤备品；餐桌端留 760 mm 餐边区。勾选柜内分区查看。'},
  basin:{p:[4.96,4.91,1.62],t:[3.92,4.16,.89],fov:62,title:'客卫 · 三角洗手台',note:'按 CAD 三角轮廓重建台面与柜体，圆盆嵌入台面；斜面开门避开卫生间入口。'},
- laundry:{p:[3.9,9.3,1.55],t:[5.85,9.3,1.2],fov:70,title:'阳台 · 洗烘',note:'洗烘正面可操作；家政柜按机器归位、长柄工具和日用品分区。'}
+ laundry:{p:[3.9,9.3,1.55],t:[5.85,9.3,1.2],fov:70,title:'阳台 · 洗烘',note:'洗烘正面可操作；旁侧改为手工桌与小吊柜，扫地机器人移至厨房自动上下水设备柜。'}
 };
 function viewFov(v){if(current==='entry' && host.clientWidth/host.clientHeight<.8)return 100;return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
 function setView(key,instant=false){
@@ -53,6 +56,8 @@ function setView(key,instant=false){
  updateLayers();
 }
 const upperCats=new Set(['WallsUpper','Windows','Curtains','BathroomWalls']);
+const serviceMaterials={exhaust:new THREE.MeshBasicMaterial({color:0xffa629,depthTest:false,depthWrite:false}),drain:new THREE.MeshBasicMaterial({color:0x24d2b0,depthTest:false,depthWrite:false}),supply:new THREE.MeshBasicMaterial({color:0x299bff,depthTest:false,depthWrite:false})};
+const originalMaterials=new WeakMap();
 const furnishing=new Set(['Furniture','Storage','Appliances','Decor','Lighting']);
 function category(o){let n=o;while(n){if(n.userData?.category)return n.userData.category;n=n.parent;}return '';}
 function updateLayers(){
@@ -62,12 +67,18 @@ function updateLayers(){
   let visible=true;
   if(upperCats.has(cat)&&$('cut').checked)visible=false;
   if(cat==='Ceiling')visible=$('roof').checked;
+  if(cat==='Services' && o.isMesh){
+   if(!originalMaterials.has(o))originalMaterials.set(o,o.material);
+   o.material=$('pipes').checked?serviceMaterials[o.userData.service_kind]||serviceMaterials.drain:originalMaterials.get(o);
+   o.renderOrder=$('pipes').checked?120:0;
+  }
   if(furnishing.has(cat)&&!$('furniture').checked)visible=false;
   if((o.userData.front_panel || /柜门拉手|抽屉拉手|家政柜门把手|三角盆柜斜面拉手/.test(o.name)) && $('internals').checked)visible=false;
   o.visible=visible;
  });
  cadLines.visible=$('cad').checked;
  usageOverlay.visible=$('usage').checked;
+ $('pipe-legend').hidden=!$('pipes').checked;
 }
 const coords=[];for(const l of window.CAD_LINES){for(const p of l){coords.push(p[0]/1000,.038,-p[1]/1000)}}
 const cadGeo=new THREE.BufferGeometry();cadGeo.setAttribute('position',new THREE.Float32BufferAttribute(coords,3));
@@ -78,7 +89,7 @@ function noteSprite(text,pos){const c=document.createElement('canvas');c.width=6
 function dimension(a,b,text){const ps=[V(...a),V(...b)];const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(ps),new THREE.LineBasicMaterial({color:0x486f54,depthTest:false}));line.renderOrder=108;usageOverlay.add(line);noteSprite(text,[(a[0]+b[0])/2,(a[1]+b[1])/2,.32]);}
 dimension([.786,1.8,.06],[1.79,1.8,.06],'玄关净距约 1000 mm');
 dimension([.786,3.7,.06],[1.557,3.7,.06],'入户通路约 770 mm');
-dimension([4.862,7.85,.06],[5.612,7.85,.06],'工位后约 750 mm');
+dimension([4.862,7.85,.06],[5.66,7.85,.06],'工位后约 800 mm');
 dimension([6.88,7.2,.06],[7.515,7.2,.06],'床尾最窄约 635 mm');
 dimension([6.9,2.90,.06],[6.9,3.747,.06],'次卧柜前约 850 mm');
 const route=[[1.18,1.25,.05],[1.18,3.1,.05],[1.18,4.65,.05],[2.5,5.05,.05],[4.95,5.3,.05],[5.22,6.2,.05],[5.22,8.85,.05]].map(p=>V(...p));
@@ -106,12 +117,13 @@ async function loadModel(){
    const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.name==='透明玻璃'){m.transparent=true;m.opacity=.18;m.depthWrite=false;}m.envMapIntensity=.8;});
   }});
   setView('overview',true);$('loading').hidden=true;$('download').disabled=false;$('walk-start').disabled=false;
-  $('status').textContent='模型已就绪 · v6';window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
+  $('status').textContent='模型已就绪 · v7';window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
  }catch(e){error('模型加载失败，请检查网络后刷新：'+e.message)}
 }
 loadModel();
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 for(const id of ['cut','roof','furniture','cad','internals','usage'])$(id).addEventListener('change',updateLayers);
+for(const id of ['pipes','walk-pipes'])$(id).addEventListener('change',()=>{const on=$(id).checked;$('pipes').checked=on;$('walk-pipes').checked=on;updateLayers();});
 $('reset').addEventListener('click',()=>setView(current));
 $('capture').addEventListener('click',()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='全屋_'+(walk?.active?'第一人称漫游':views[current].title)+'.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
 $('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=modelBytes;const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download='全屋_全屋模型.glb';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});

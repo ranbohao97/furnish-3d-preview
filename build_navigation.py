@@ -22,9 +22,9 @@ def matrix(n):
  m[:3,:3]=np.array([[1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w)],[2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w)],[2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)]])@np.diag(n.get('scale',[1,1,1]));m[:3,3]=n.get('translation',[0,0,0]);return m
 parents={c:i for i,n in enumerate(g['nodes'])for c in n.get('children',[])}
 def world(i):return (world(parents[i])if i in parents else np.eye(4))@matrix(g['nodes'][i])
-obstacles=[];included=0
+obstacles=[];structure=[];included=0
 for i,n in enumerate(g['nodes']):
- if 'mesh'not in n or n.get('extras',{}).get('category')not in {'WallsLow','WallsUpper','BathroomWalls','Windows','Doors','Storage','Furniture','Appliances','Exterior'}:continue
+ if 'mesh'not in n or n.get('extras',{}).get('category')not in {'WallsLow','WallsUpper','BathroomWalls','Windows','Doors','Storage','Furniture','Appliances','Exterior','ServiceEnclosures'}:continue
  transform=world(i);polys=[]
  for p in g['meshes'][n['mesh']]['primitives']:
   v=accessor(p['attributes']['POSITION']);v=v@transform[:3,:3].T+transform[:3,3]
@@ -34,7 +34,9 @@ for i,n in enumerate(g['nodes']):
   tri=v[indices.reshape(-1,3)][:,:,[0,2]];tri[:,:,1]*=-1
   u=tri[:,1]-tri[:,0];w=tri[:,2]-tri[:,0];area=np.abs(u[:,0]*w[:,1]-u[:,1]*w[:,0])
   polys.extend(Polygon(t)for t in tri[area>1e-9])
- if polys:obstacles.append(unary_union(polys));included+=1
+ if polys:
+  shape=unary_union(polys);obstacles.append(shape);included+=1
+  if n.get('extras',{}).get('category') in {'WallsLow','WallsUpper','BathroomWalls','Windows','Exterior','ServiceEnclosures'}:structure.append(shape)
 step=.04;radius=.20
 footprint=Polygon(json.loads((R/'model-data.json').read_text())['footprint'])
 # Half-cell diagonal margin makes every open cell safe across its whole area.
@@ -42,6 +44,7 @@ margin=radius+step*2**.5/2
 safe=footprint.buffer(-margin).difference(unary_union(obstacles).buffer(margin))
 nx=250;ny=260;xx,yy=np.meshgrid((np.arange(nx)+.5)*step,(np.arange(ny)+.5)*step)
 free=contains_xy(safe,xx,yy)
+structure_free=contains_xy(footprint.buffer(-margin).difference(unary_union(structure).buffer(margin)),xx,yy)
 # Mark components for safe room starts and connectivity regression checks.
 labels=np.full((ny,nx),-1,dtype=int);components=[]
 for y,x in zip(*np.where(free)):
@@ -61,6 +64,6 @@ resolved={}
 for name,(x,y)in starts.items():
  ys,xs=np.where(free);k=np.argmin((xx[ys,xs]-x)**2+(yy[ys,xs]-y)**2);a,b=xs[k],ys[k]
  resolved[name]={'x':round(float(xx[b,a]),3),'y':round(float(yy[b,a]),3),'component':int(labels[b,a]),'connectedToEntry':bool(labels[b,a]==main)}
-data={'model_sha256':hashlib.sha256(blob).hexdigest(),'step':step,'radius':radius,'eyeHeight':1.6,'bodyTop':1.85,'width':nx,'height':ny,'rows':[''.join('.'if c else '#'for c in row)for row in free],'starts':resolved,'obstacleMeshes':included}
+data={'model_sha256':hashlib.sha256(blob).hexdigest(),'step':step,'radius':radius,'eyeHeight':1.6,'bodyTop':1.85,'width':nx,'height':ny,'rows':[''.join('.'if c else '#'for c in row)for row in free],'starts':resolved,'obstacleMeshes':included,'structureRows':[''.join('.'if c else '#'for c in row)for row in structure_free]}
 (R/'navigation.json').write_text(json.dumps(data,ensure_ascii=False,separators=(',',':'))+'\n')
 print(json.dumps({'obstacleMeshes':included,'components':sorted([len(c)for c in components],reverse=True)[:10],'starts':resolved},ensure_ascii=False,indent=2))

@@ -32,3 +32,23 @@ test('entry connects to living, bedrooms, study and balcony; kitchen shortcut is
 test('floor TV stand base remains an obstacle despite its low height',()=>{
  assert.equal(isWalkable(nav,1.0,7.40),false);
 });
+
+test('pass-through mode crosses furniture but retains walls and outer boundary',async()=>{
+ const {navigationMode,nearestWalkable}=await import('./navigation.js');
+ const free=navigationMode(nav,true),p=nav.starts.entry;
+ const left=moveOnGrid(free,p,-10,0);
+ assert.ok(left.x<.8&&left.x>.5,'cross shoe cabinet, stop at wall');
+ assert.equal(isWalkable(nav,left.x,left.y),false);
+ const restored=nearestWalkable(nav,left);
+ assert.ok(isWalkable(nav,restored.x,restored.y));
+ assert.equal(isWalkable(free,.15,3),false);
+ assert.equal(isWalkable(free,1.0,7.4),true,'pass low TV base');
+ assert.deepEqual(nearestWalkable(nav,p),p);
+ const seen=new Set(),q=[p];
+ for(let i=0;i<q.length;i++){
+  const v=q[i],a=Math.floor(v.x/free.step),b=Math.floor(v.y/free.step),k=`${a},${b}`;
+  if(seen.has(k))continue;seen.add(k);
+  for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){const x=(a+dx+.5)*free.step,y=(b+dy+.5)*free.step;if(!seen.has(`${a+dx},${b+dy}`)&&isWalkable(free,x,y))q.push({x,y});}
+ }
+ const k=nav.starts.kitchen;assert.ok(seen.has(`${Math.floor(k.x/free.step)},${Math.floor(k.y/free.step)}`),'entry reaches kitchen through furniture');
+});

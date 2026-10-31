@@ -17,10 +17,10 @@ checks={}
 checks['kitchen_counter_clear_mm']=round((bound('窗侧钢台面')[0][0]-bound('岛台不锈钢台面')[1][0])*1000,1)
 checks['entry_clear_mm']=round((1.79-bound(['玄关通顶柜','玄关A','玄关B','玄关C','玄关D'])[1][0])*1000,1)
 checks['dining_west_route_mm']=round((bound('日常餐椅')[0][0]-bound(['餐边通顶柜E','餐边E'])[1][0])*1000,1)
-checks['desk_rear_conservative_mm']=round((bound(['家政分区柜门','家政柜门把手'])[0][0]-bound('人体工学椅')[1][0])*1000,1)
+checks['desk_rear_conservative_mm']=round((bound('手工桌桌面')[0][0]-bound('人体工学椅')[1][0])*1000,1)
 checks['bed_foot_min_mm']=round((bound('主床床架')[0][0]-bound(['床尾浅柜','床尾浅衣柜'])[1][0])*1000,1)
 checks['guest_storage_front_mm']=round((bound('次卧分格收纳柜')[0][1]-bound('次卧日床框架')[1][1])*1000,1)
-checks['kitchen_wall_cabinets']=len([v for v in rows if '吊柜'in v['name'] or '厨房开放层板'in v['name'] or '厨房高柜'in v['name']])
+checks['kitchen_wall_cabinets']=len([v for v in rows if v['extras'].get('room')=='kitchen' and ('吊柜'in v['name'] or '厨房开放层板'in v['name'] or '厨房高柜'in v['name'])])
 checks['front_panels_with_inspection_toggle']=sum(bool(v['extras'].get('front_panel'))for v in rows)
 checks['triangle_counter_outline_mm']=[[3710,3935],[4380,3935],[3750,4600],[3710,4600]]
 checks['entry_run_height_mm']=round(bound(['玄关通顶柜','餐边通顶柜E'])[1][2]*1000,1)
@@ -51,6 +51,21 @@ lo,hi=bound('电视落地支架底座');checks['tv_stand_base_mm']=[round((hi[i]
 assert abs(lo[2]-.025)<.001
 checks['coffee_tables']=sum('茶几'in v['name'] for v in rows)
 assert checks['coffee_tables']==0
+checks['handcraft_desktop_mm']=[round(float(v)*1000,1) for v in (bound('手工桌桌面')[1]-bound('手工桌桌面')[0])]
+assert checks['handcraft_desktop_mm']==[560.0,1280.0,30.0]
+assert abs(bound('手工桌桌面')[1][2]-.75)<.001
+checks['store_cad_envelope_mm']=[1530,850]
+checks['store_closed_door_panels']=sum(v['name'].startswith('储物间封闭柜门') for v in rows)
+assert checks['store_closed_door_panels']==2
+checks['study_monitors']=sum(v['name'].startswith('工位显示器') for v in rows)
+assert checks['study_monitors']==1 and bound('工位显示器')[0][1]>7.5
+assert bound('笔记本底座')[1][1]<7.0
+checks['robot_room']=[v['extras']['room']for v in rows if v['name']=='扫地机自动上下水基站'][0]
+assert checks['robot_room']=='kitchen'
+assert bound('厨房鹅颈水龙头')[0][0]<1.84
+checks['service_meshes']=sum(v['extras'].get('category')=='Services' for v in rows)
+assert checks['service_meshes']>=16
+assert not any(v['name'].startswith('家政柜') for v in rows)
 checks['mesh_count']=len(g['meshes']);checks['embedded_images']=len(g.get('images',[]))
 assert checks['kitchen_wall_cabinets']==0
 assert abs(checks['kitchen_counter_clear_mm']-960)<.5

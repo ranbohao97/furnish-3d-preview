@@ -1,4 +1,4 @@
-import {moveOnGrid,movementVector} from './navigation.js';
+import {moveOnGrid,movementVector,nearestWalkable,navigationMode} from './navigation.js';
 export function createWalkthrough({camera,canvas,nav,host,onEnter,onExit}){
  const $=id=>document.getElementById(id),keys=new Set();
  let active=false,paused=false,yaw=0,pitch=0,drag=null,saved=null,lastHud=0;
@@ -34,7 +34,7 @@ export function createWalkthrough({camera,canvas,nav,host,onEnter,onExit}){
  }
  function advance(forward,right,dt){
   const delta=movementVector(yaw,forward,right,1.15*dt);
-  const next=moveOnGrid(nav,{x:camera.position.x,y:-camera.position.z},delta.x,delta.y);
+  const next=moveOnGrid(navigationMode(nav,$('walk-through').checked),{x:camera.position.x,y:-camera.position.z},delta.x,delta.y);
   camera.position.set(next.x,nav.eyeHeight,-next.y);
  }
  const moveKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown']);
@@ -64,6 +64,11 @@ export function createWalkthrough({camera,canvas,nav,host,onEnter,onExit}){
   // Keyboard activation of on-screen movement buttons gives a small, predictable step.
   b.addEventListener('click',e=>{if(e.detail===0&&active&&!paused){const k=b.dataset.walkKey;if(k==='ArrowLeft'||k==='ArrowRight'){yaw+=(k==='ArrowLeft'?1:-1)*.18;orient();}else advance(k==='KeyW'?1:k==='KeyS'?-1:0,k==='KeyD'?1:k==='KeyA'?-1:0,.18);hud();}});
  }
+ $('walk-through').addEventListener('change',()=>{
+  const p=nearestWalkable(navigationMode(nav,$('walk-through').checked),{x:camera.position.x,y:-camera.position.z});
+  camera.position.set(p.x,nav.eyeHeight,-p.y);resume();
+ });
+ new ResizeObserver(entries=>{bar.style.setProperty('--toolbar-height',entries[0].target.offsetHeight+'px');}).observe(bar.querySelector('.walk-toolbar'));
  startButton.addEventListener('click',enter);$('walk-exit').addEventListener('click',exit);$('walk-lock').addEventListener('click',lockMouse);
  $('walk-resume').addEventListener('click',resume);$('walk-stop').addEventListener('click',exit);$('walk-home').addEventListener('click',()=>{relocate('entry');resume();});
  $('walk-room').addEventListener('change',e=>{relocate(e.target.value);resume();});

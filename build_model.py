@@ -282,7 +282,7 @@ def cabinet(name,x1,x2,y1,y2,height,face='y+',material='walnut',room='shared',ba
             for z in [base+.24+k*.28 for k in range(int((height-base-.1)/.28))]:
                 if z<height-.10:part('可调层板',lo,hi,t,depth-.035,z,z+t,'ivory')
             part('柜门',i*bay+.003,(i+1)*bay-.003,depth,depth+.018,base+.006,height-.006,front=True)
-            hz=min(height-.12,1.10)
+            hz=max(base+.12,min(height-.12,1.10))
             tube(name+'柜门拉手',[point((lo+hi)/2-.075,depth+.039,hz),point((lo+hi)/2+.075,depth+.039,hz)],.007,room=room)
     return
 def door(name,hinge,width,angle,material='walnut',height=2.15,room='shared'):
@@ -418,16 +418,27 @@ for yy in (6.84,7.28):tube('电视支架托盘撑',[(.52,7.06,.50),(.61,yy,.595)
 box('回音壁',(.625,7.06,.640),(.09,.95,.065),'black','Furniture','living',.014)
 tube('电视支架背部理线',[(.568,7.08,1.12),(.474,7.08,1.05),(.474,7.08,.08),(.34,7.08,.06)],.006,'black','Furniture','living')
 # Double desk and perforated-height divider behind the sofa.
-rect('沙发后半高隔板',3.47,3.59,6.99,8.70,0,1.18,'walnut','Storage','study',.008)
+# CAD yellow footprint is a decorative partition, not a cabinet.
+rect('装饰隔断墙下段',3.47,3.59,6.99,8.70,0,.92,'wall','Furniture','study',.008)
+rect('装饰隔断墙上段',3.47,3.59,6.99,8.70,2.10,2.40,'wall','Furniture','study',.008)
+for ya,yb in [(6.99,7.49),(8.19,8.70)]:rect('装饰隔断墙侧段',3.47,3.59,ya,yb,.92,2.10,'wall','Furniture','study',.008)
+rect('装饰隔断透光玻璃',3.525,3.535,7.49,8.19,.94,2.08,'glass','Furniture','study')
+for yy in (7.49,8.17):rect('隔断木饰收口',3.46,3.60,yy,yy+.02,.92,2.10,'walnut','Furniture','study')
 rect('双人工位长桌',3.61,4.25,5.72,8.60,.735,.775,'walnut','Furniture','study',.012)
 for yy in (5.84,8.47):
     tube('长桌钢架',[(3.73,yy,.06),(3.73,yy,.73),(4.20,yy,.73),(4.20,yy,.06)],.018,room='study')
 cabinet('工位抽屉',3.67,4.18,7.0,7.36,.70,'x+','black','study',drawers=True)
-for yy in (6.35,7.88):
+for yy in (7.88,):
     box('工位显示器',(3.77,yy,1.14),(.045,.61,.36),'black','Furniture','study',.008)
     box('工位屏幕',(3.797,yy,1.14),(.006,.58,.33),'screen','Furniture','study',.002)
     tube('显示器支架',[(3.75,yy,.775),(3.75,yy,.96),(3.77,yy,.96)],.018,room='study')
     box('键盘',(4.04,yy,.79),(.16,.40,.018),'black','Furniture','study',.003)
+
+# Lower workstation: laptop only, its screen faces the chair on the east.
+box('笔记本底座',(3.98,6.35,.789),(.25,.34,.022),'steel','Furniture','study',.008)
+box('笔记本键盘',(4.00,6.35,.802),(.15,.29,.004),'black','Furniture','study',.002)
+o=box('笔记本屏幕外壳',(3.85,6.35,.91),(.012,.34,.23),'steel','Furniture','study',.006);o.rotation_euler.y=-.18
+box('笔记本屏幕',(3.861,6.35,.91),(.005,.315,.20),'screen','Furniture','study',.003)
 
 def chair(name,x,y,angle=0,office=False,material='tan',room='dining'):
     # local forward is -Y
@@ -446,22 +457,12 @@ def chair(name,x,y,angle=0,office=False,material='tan',room='dining'):
         for xx in (-.19,.19):
             tube(name+'悬臂钢管',[pt(xx,.19,.78),pt(xx,.19,.46),pt(xx,-.19,.46),pt(xx,-.19,.06),pt(xx,.22,.06)],.013,room=room)
 for yy in (6.35,7.87):chair('人体工学椅',4.58,yy,-math.pi/2,True,'ivory','study')
-# Sewing machine at far desk end, ready to move to the free end of the table.
-box('缝纫机底座',(3.99,8.38,.80),(.29,.31,.045),'white','Furniture','study',.018)
-box('缝纫机机身',(3.92,8.40,.92),(.10,.28,.22),'white','Furniture','study',.035)
-box('缝纫机机臂',(4.00,8.40,1.00),(.25,.10,.09),'white','Furniture','study',.025)
-cyl('缝纫线轴',(3.92,8.39,1.06),.025,.06,'red',room='study')
 # Daily dining layout: 900 mm table shifted east; west entrance route remains clear.
 cyl('圆餐桌桌面',(2.45,3.70,.76),.45,.045,'walnut',room='dining',vertices=64)
 cyl('圆餐桌中柱',(2.45,3.70,.39),.075,.70,'black',room='dining')
 cyl('圆餐桌底座',(2.45,3.70,.045),.30,.045,'black',room='dining',vertices=48)
 for a in [math.pi/3,2*math.pi/3,math.pi]:
     chair('日常餐椅',2.45+.66*math.cos(a),3.70+.66*math.sin(a),a-math.pi/2,False,'tan','dining')
-# Fourth chair folds into the storage niche, available for guests.
-for xx in (6.81,7.19):tube('备用折叠餐椅框架',[(xx,5.08,.18),(xx,5.08,1.08),(xx,5.00,1.08),(xx,5.00,.18)],.013,'chrome','Storage','store')
-box('备用折叠餐椅靠背',(7.0,5.04,.91),(.36,.055,.22),'tan','Storage','store',.025)
-box('备用折叠餐椅收起座面',(7.0,5.04,.54),(.36,.07,.38),'tan','Storage','store',.025)
-
 # Kitchen: exact peninsula/U outline; sink and hob have real recessed bowls.
 # Work-side access: dishwasher, utensil pull-out and sink unit face east.
 rect('洗碗机隔侧板',1.79,2.39,1.17,1.188,.10,.85,'walnut','Storage','kitchen')
@@ -477,11 +478,20 @@ tube('水槽存水弯',[(2.09,2.41,.66),(2.09,2.41,.35),(2.0,2.41,.28),(1.9,2.41
 box('水槽下分类桶',(2.14,2.78,.31),(.32,.27,.36),'ivory','Storage','kitchen',.018)
 rect('厨房转角封板',2.10,2.39,.84,1.17,.10,.85,'walnut','Storage','kitchen')
 rect('厨房转角连续钢台面',2.10,2.39,.84,1.17,.85,.88,'steel','Furniture','kitchen')
-cabinet('灶下橱柜',2.10,3.95,.24,.84,.85,'y+','walnut','kitchen',drawers=True)
-cabinet('右侧橱柜',3.37,3.97,.84,1.50,.85,'x-','walnut','kitchen')
-cabinet('冰箱旁窄拉篮',3.37,3.97,2.23,2.46,.85,'x-','walnut','kitchen',drawers=True)
+cabinet('灶下橱柜',2.10,3.28,.24,.84,.85,'y+','walnut','kitchen',drawers=True)
+# Automatic-water robot dock under window; 430 x 300 mm clear front opening.
+rect('扫地机设备柜背板',3.94,3.97,.86,1.50,.02,.85,'walnut','Storage','kitchen')
+for yy in (.86,1.48):rect('扫地机设备柜侧板',3.37,3.94,yy,yy+.02,.02,.85,'walnut','Storage','kitchen')
+rect('扫地机设备柜上隔板',3.37,3.94,.88,1.48,.34,.36,'walnut','Storage','kitchen')
+for ya,yb in [(.88,.96),(1.39,1.48)]:rect('扫地机洞口侧封板',3.35,3.37,ya,yb,.02,.34,'walnut','Storage','kitchen')
+o=rect('扫地机设备柜检修门',3.35,3.37,.88,1.48,.36,.84,'walnut','Storage','kitchen');o['front_panel']=True
+box('扫地机自动上下水基站',(3.70,1.175,.1445),(.450,.381,.249),'white','Appliances','kitchen',.018)
+cyl('扫地机器人归位',(3.48,1.175,.070),.165,.100,'white','Appliances','kitchen',48)
+rect('扫地机防水托盘',3.38,3.94,.91,1.44,.016,.025,'steel','Appliances','kitchen')
+cabinet('冰箱旁窄拉篮',3.37,3.71,2.23,2.46,.85,'x-','walnut','kitchen',drawers=True)
 rect('窄拉篮台面',3.35,3.97,2.23,2.46,.85,.88,'steel','Furniture','kitchen')
-rect('灶侧钢台面',2.08,3.97,.23,.86,.85,.88,'steel','Furniture','kitchen')
+rect('灶侧钢台面',2.08,3.30,.23,.86,.85,.88,'steel','Furniture','kitchen')
+rect('管井前钢台面',3.30,3.97,.62,.86,.85,.88,'steel','Furniture','kitchen')
 rect('窗侧钢台面',3.35,3.99,.86,1.50,.85,.88,'steel','Furniture','kitchen')
 # Sink opening split into four strips, leaving a genuine recess.
 for b in [(1.79,2.39,1.17,2.10),(1.79,2.39,2.72,2.97),(1.79,1.87,2.10,2.72),(2.31,2.39,2.10,2.72)]:
@@ -489,7 +499,7 @@ for b in [(1.79,2.39,1.17,2.10),(1.79,2.39,2.72,2.97),(1.79,1.87,2.10,2.72),(2.3
 rect('水槽内底',1.87,2.31,2.10,2.72,.66,.68,'steel','Furniture','kitchen',.025)
 for b in [(1.87,1.885,2.10,2.72),(2.295,2.31,2.10,2.72),(1.87,2.31,2.10,2.115),(1.87,2.31,2.705,2.72)]:
     rect('水槽内壁',*b,.68,.88,'steel','Furniture','kitchen',.006)
-tube('厨房鹅颈水龙头',[(2.34,2.4,.88),(2.34,2.4,1.18),(2.30,2.4,1.23),(2.13,2.4,1.23),(2.10,2.4,1.17)],.018,room='kitchen')
+tube('厨房鹅颈水龙头',[(1.835,2.24,.88),(1.835,2.24,1.18),(1.87,2.28,1.23),(2.01,2.42,1.23),(2.04,2.45,1.17)],.018,room='kitchen')
 cyl('水槽下水口',(2.09,2.41,.686),.035,.006,'black',room='kitchen')
 rect('嵌入式燃气灶',2.47,3.27,.35,.80,.882,.90,'black','Furniture','kitchen',.016)
 for xx in (2.66,3.08):
@@ -499,6 +509,27 @@ for xx in (2.66,3.08):
         tube('炉架',[(xx+.025*math.cos(ang),.56+.025*math.sin(ang),.95),(xx+.12*math.cos(ang),.56+.12*math.sin(ang),.95)],.007,'black',room='kitchen')
 rect('钢制抽油烟机',2.43,3.33,.25,.75,1.62,1.70,'steel','Furniture','kitchen')
 rect('烟机风管',2.68,3.08,.25,.57,1.7,2.72,'steel','Furniture','kitchen')
+# Services: shaft positions follow plan symbols, diameters and branches are schematic.
+def service(o,kind,source='CAD shaft position; diameter / routing schematic'):
+ o['service_kind']=kind;o['source']=source;return o
+service(rect('厨房排烟竖井',3.61,3.90,.30,.54,0,H,'steel','Services','kitchen'),'exhaust')
+for name,x,y,r,room in [('厨房下水立管',3.42,.43,.055,'kitchen'),('厨房冰箱侧下水立管',3.85,2.34,.055,'kitchen'),('客卫排污立管',3.82,2.85,.055,'guestbath'),('客卫排水立管',3.82,3.04,.0375,'guestbath'),('客卫通气立管',3.82,3.20,.0375,'guestbath'),('主卫排污立管',9.43,3.25,.055,'masterbath'),('主卫排水立管',9.43,3.45,.0375,'masterbath'),('主卫通气立管',9.43,3.64,.0375,'masterbath')]:
+ service(tube(name,[(x,y,-.06),(x,y,H)],r,'white','Services',room),'drain')
+for name,b,room in [('厨房烟道砌筑包封',(3.55,3.97,.24,.62),'kitchen'),('厨房下水包管',(3.30,3.55,.24,.62),'kitchen'),('厨房冰箱侧包管',(3.73,3.97,2.23,2.46),'kitchen'),('客卫砖砌包管',(3.71,3.94,2.70,3.29),'guestbath'),('主卫砖砌包管',(9.30,9.56,3.11,3.76),'masterbath')]:
+ rect(name,*b,0,H,'tile' if room!='kitchen' else 'wall','ServiceEnclosures',room)
+service(tube('烟机接入烟道示意',[(2.88,.41,2.48),(3.75,.41,2.48)],.09,'steel','Services','kitchen'),'exhaust')
+# Supply/drain routes are proposals, not surveyed construction drawings.
+for name,pts,r,kind,room in [
+ ('厨房水槽排水支管示意',[(1.90,2.41,.35),(1.90,2.41,-.04),(2.22,2.41,-.04),(2.22,.70,-.04),(3.42,.70,-.04),(3.42,.43,.20)],.025,'drain','kitchen'),
+ ('扫地机排水接入示意',[(3.92,1.17,.23),(3.92,1.17,.33),(3.88,.70,.33),(3.42,.70,.33),(3.42,.43,.33)],.012,'drain','kitchen'),
+ ('扫地机冷水支管示意',[(3.92,1.21,.20),(3.92,1.21,.58),(3.48,.70,.58),(3.48,.43,.58)],.008,'supply','kitchen'),
+ ('主卫马桶排水支管示意',[(9.10,4.32,-.04),(9.43,4.32,-.04),(9.43,3.25,-.04)],.055,'drain','masterbath'),
+ ('主卫台盆排水支管示意',[(9.25,5.20,.62),(9.25,5.20,-.04),(9.43,5.20,-.04),(9.43,3.45,-.04)],.025,'drain','masterbath'),
+ ('客卫马桶排水支管示意',[(4.10,3.27,-.04),(3.82,3.27,-.04),(3.82,2.85,-.04)],.055,'drain','guestbath'),
+ ('客卫洗手台排水支管示意',[(3.94,4.15,.58),(3.94,4.15,-.04),(3.82,4.15,-.04),(3.82,3.04,-.04)],.025,'drain','guestbath')]:
+ service(tube(name,pts,r,'blue' if kind=='supply' else 'white','Services',room),kind,'Proposed branch route; verify on site')
+box('扫地机供水检修阀',(3.90,1.21,.58),(.035,.055,.055),'blue','Appliances','kitchen')
+# Keep kitchen cabinetry outside the full-height shafts.
 # Tile backsplash with explicit grout, no full-wall stone.
 rect('厨房砖缝基层',2.10,3.95,.238,.251,.89,1.65,'grout','Furniture','kitchen')
 for i in range(12):
@@ -538,21 +569,21 @@ for z,name in [(.43,'洗衣机'),(1.30,'烘干机')]:
     cyl(name+'玻璃门',(5.536,9.47,z),.18,.024,'screen','Appliances','laundry',48,(0,math.pi/2,0))
     box(name+'控制板',(5.533,9.47,z+.30),(.012,.48,.07),'black','Appliances','laundry',.004)
 rect('洗衣机上层板',5.54,6.21,9.12,9.82,1.73,1.76,'walnut','Storage','laundry')
-# Housekeeping recess leaves 800 mm behind the tucked office chair.
-rect('家政柜背板',6.20,6.22,7.12,8.40,.03,2.42,'walnut','Storage','laundry')
-for yy in (7.12,7.75,8.38):rect('家政柜竖隔',5.66,6.20,yy,yy+.02,.03,2.42,'walnut','Storage','laundry')
-for z in (.62,1.16,1.70,2.40):rect('家政用品层板',5.66,6.20,7.14,7.75,z,z+.02,'ivory','Storage','laundry')
-rect('清洁工具柜底板',5.66,6.20,7.77,8.38,.06,.08,'walnut','Storage','laundry')
-rect('清洁工具柜顶板',5.66,6.20,7.77,8.38,2.40,2.42,'walnut','Storage','laundry')
-for y1,y2 in [(7.14,7.73),(7.78,8.37)]:
- o=rect('家政分区柜门',5.64,5.66,y1,y2,.66 if y1<7.2 else .10,2.39,'walnut','Storage','laundry');o['front_panel']=True
- tube('家政柜门把手',[(5.62,y2-.08,1.04),(5.62,y2-.08,1.22)],.008,room='laundry')
-box('扫地机基站',(5.93,7.43,.27),(.47,.43,.50),'white','Appliances','laundry',.035)
-cyl('扫地机器人归位',(5.78,7.43,.075),.17,.10,'white','Appliances','laundry',48)
-for yy in (7.92,8.17):
- tube('清洁工具长柄',[(6.0,yy,.20),(6.0,yy,1.60)],.018,'steel','Storage','laundry')
- box('清洁工具地刷',(5.99,yy,.14),(.23,.15,.09),'black','Storage','laundry',.02)
-for z in (.66,1.20,1.74):box('家政收纳篮',(5.94,7.44,z+.13),(.40,.43,.24),'ivory','Storage','laundry',.015)
+# Handcraft station in CAD recess: 1280 x 560, 750 mm working height.
+rect('手工桌桌面',5.66,6.22,7.12,8.40,.72,.75,'walnut','Furniture','study',.012)
+for yy in (7.14,8.36):rect('手工桌侧腿',5.70,6.20,yy,yy+.025,.02,.72,'walnut','Furniture','study')
+rect('手工桌背挡',6.18,6.20,7.16,8.36,.12,.72,'walnut','Furniture','study')
+# Compact upper cupboards only 280 mm deep, with 800 mm clear above desktop.
+for ya,yb in [(7.14,7.74),(7.78,8.38)]:cabinet('手工小吊柜',5.92,6.20,ya,yb,2.15,'x-','walnut','study',base=1.55)
+rect('手工桌工具挂板',6.18,6.20,7.20,8.30,.84,1.44,'tan','Furniture','study')
+for yy in (7.30,7.60,7.90,8.20):tube('工具挂钩',[(6.17,yy,1.20),(6.12,yy,1.20),(6.12,yy,1.24)],.006,room='study')
+box('缝纫机底座',(5.94,7.91,.775),(.29,.31,.045),'white','Furniture','study',.018)
+box('缝纫机机身',(6.01,7.93,.90),(.10,.28,.22),'white','Furniture','study',.035)
+box('缝纫机机臂',(5.93,7.93,.98),(.25,.10,.09),'white','Furniture','study',.025)
+cyl('缝纫线轴',(6.01,7.92,1.04),.025,.06,'red',room='study')
+# Tucked movable stool, leaving the shared aisle clear.
+cyl('手工桌收起圆凳',(5.98,7.45,.44),.18,.06,'green',room='study')
+for yy in (7.34,7.56):tube('手工凳腿',[(5.88,yy,.02),(5.88,yy,.41),(6.08,yy,.41),(6.08,yy,.02)],.012,room='study')
 # Metal hanging wardrobes: open upper part, sliding/folding doors set aside.
 def metalwardrobe(name,b,face,room):
  x1,x2,y1,y2=b
@@ -617,12 +648,17 @@ for xx,ma in [(6.12,'red'),(7.32,'tan')]:box('次卧抱枕',(xx,2.18,.68),(.42,.
 cyl('次卧可移边几',(7.58,3.24,.49),.18,.025,'steel',room='guest')
 cyl('次卧边几立柱',(7.58,3.24,.27),.022,.42,'chrome',room='guest')
 cabinet('次卧分格收纳柜',6.50,7.80,3.80,4.18,1.02,'y-','walnut','guest')
-# Storage niche faces the corridor; floor in front of shelving remains clear.
-for z in (.10,.60,1.10,1.60,2.10):rect('储物间浅层板',7.48,7.88,4.43,5.14,z,z+.02,'steel','Storage','store')
-for xx in (7.50,7.86):
- for yy in (4.46,5.11):tube('储物间立柱',[(xx,yy,.05),(xx,yy,2.20)],.012,'steel','Storage','store')
-for z in (.63,1.13,1.63):box('布草收纳箱',(7.68,4.78,z+.15),(.34,.54,.28),'ivory','Storage','store',.018)
-box('归位行李箱',(7.67,4.77,.34),(.34,.52,.46),'green','Storage','store',.035)
+# CAD niche: x=6.38..7.91, y=4.32..5.17, 1530 x 850 mm before door lining.
+# Shelves along its long north side replace the old end-on narrow rack.
+for z in (.10,.60,1.10,1.60,2.10):rect('储物间长边浅层板',6.48,7.87,4.82,5.14,z,z+.02,'walnut','Storage','store')
+for xx in (6.50,7.20,7.85):rect('储物间层板立撑',xx,xx+.018,4.84,5.14,.08,2.12,'steel','Storage','store')
+for xx in (6.76,7.43):
+ for z in (.63,1.13,1.63):box('储物间收纳箱',(xx,4.99,z+.13),(.48,.27,.24),'ivory','Storage','store',.015)
+for ya,yb in [(4.32,4.35),(5.14,5.17)]:rect('储物间柜门框',6.38,6.46,ya,yb,0,2.40,'walnut','Storage','store')
+rect('储物间柜门顶封',6.38,6.46,4.32,5.17,2.36,H,'wall','Storage','store')
+for ya,yb in [(4.353,4.739),(4.745,5.137)]:
+ o=rect('储物间封闭柜门',6.38,6.40,ya,yb,.025,2.355,'walnut','Storage','store');o['front_panel']=True
+ o=tube('储物间柜门拉手',[(6.355,(ya+yb)/2,1.00),(6.355,(ya+yb)/2,1.18)],.007,room='store');o['front_panel']=True
 
 def toilet(name,x,y,angle=0,room='guestbath'):
     # toilet length along X, outlet at east/right side, as in the CAD.
@@ -794,6 +830,8 @@ CAMS={
  '08_玄关通顶柜':camera('08 玄关通顶柜',(3.10,2.78,1.64),(.52,2.80,1.37),22),
  '10_玄关柜内分区':camera('10 玄关柜内分区',(3.10,2.78,1.64),(.52,2.80,1.37),22),
  '09_三角洗手台':camera('09 三角洗手台',(4.96,4.91,1.62),(3.92,4.16,.89),30),
+ '12_手工桌':camera('12 手工桌',(4.55,6.7,1.55),(5.98,7.78,1.15),22),
+ '13_储物柜':camera('13 储物柜',(4.80,4.45,1.45),(6.42,4.76,1.2),22),
  '07_主卫':camera('07 主卫',(8.68,5.56,1.58),(9.00,4.0,1.0),18),
 }
 scene.render.engine='CYCLES';scene.cycles.samples=24;scene.cycles.use_denoising=True
@@ -804,7 +842,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='中古 / 包豪斯 · 65英寸落地电视 / 无茶几 v6'
+scene['Project']='中古 / 包豪斯 · 手工桌 / 储物柜 / 管道 v7'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'

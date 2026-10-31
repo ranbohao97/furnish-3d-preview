@@ -16,3 +16,15 @@ export function movementVector(yaw,forward,right,distance){
  const norm=Math.hypot(forward,right)||1;
  return {x:(-Math.sin(yaw)*forward+Math.cos(yaw)*right)*distance/norm,y:(Math.cos(yaw)*forward+Math.sin(yaw)*right)*distance/norm};
 }
+
+// Switching collision on while inside furniture must not trap the visitor.
+export function nearestWalkable(nav,position){
+ if(isWalkable(nav,position.x,position.y))return position;
+ let nearest=null,best=Infinity;
+ for(let y=0;y<nav.height;y++)for(let x=0;x<nav.width;x++)if(nav.rows[y][x]==='.'){
+  const p={x:(x+.5)*nav.step,y:(y+.5)*nav.step},d=(p.x-position.x)**2+(p.y-position.y)**2;
+  if(d<best){nearest=p;best=d;}
+ }
+ return nearest||position;
+}
+export function navigationMode(nav,passObjects){return passObjects?{...nav,rows:nav.structureRows}:nav;}

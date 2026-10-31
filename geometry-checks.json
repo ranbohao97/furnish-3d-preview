@@ -2,11 +2,11 @@
   "kitchen_counter_clear_mm": 960.0,
   "entry_clear_mm": 1004.0,
   "dining_west_route_mm": 771.5,
-  "desk_rear_conservative_mm": 749.7,
+  "desk_rear_conservative_mm": 797.7,
   "bed_foot_min_mm": 635.0,
   "guest_storage_front_mm": 854.0,
   "kitchen_wall_cabinets": 0,
-  "front_panels_with_inspection_toggle": 79,
+  "front_panels_with_inspection_toggle": 78,
   "triangle_counter_outline_mm": [
     [
       3710,
@@ -100,6 +100,19 @@
     25.0
   ],
   "coffee_tables": 0,
-  "mesh_count": 2262,
+  "handcraft_desktop_mm": [
+    560.0,
+    1280.0,
+    30.0
+  ],
+  "store_cad_envelope_mm": [
+    1530,
+    850
+  ],
+  "store_closed_door_panels": 2,
+  "study_monitors": 1,
+  "robot_room": "kitchen",
+  "service_meshes": 17,
+  "mesh_count": 2266,
   "embedded_images": 2
 }
