@@ -1,0 +1,37 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {createHash} from 'node:crypto';
+import {isWalkable,navigationMode} from './navigation.js';
+const read=f=>fs.readFileSync(new URL(f,import.meta.url));
+const options=JSON.parse(read('./kitchen-options.json'));
+function model(file){const b=read(file);return {b,g:JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString())};}
+function bounds(g,n){
+ const out=[];const [x,y,z,w]=n.rotation||[0,0,0,1],sc=n.scale||[1,1,1],t=n.translation||[0,0,0];
+ const r=[[1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w)],[2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w)],[2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)]];
+ for(const p of g.meshes[n.mesh].primitives){const a=g.accessors[p.attributes.POSITION];for(let i=0;i<8;i++){
+  const v=[0,1,2].map(j=>((i>>j)&1?a.max[j]:a.min[j])*sc[j]);const q=r.map((row,j)=>row.reduce((sum,c,k)=>sum+c*v[k],0)+t[j]);out.push([q[0],-q[2],q[1]]);
+ }}return {min:[0,1,2].map(i=>Math.min(...out.map(v=>v[i]))),max:[0,1,2].map(i=>Math.max(...out.map(v=>v[i])))};
+}
+function merged(g,prefix){const rows=g.nodes.filter(n=>n.mesh!==undefined&&n.name.startsWith(prefix)).map(n=>bounds(g,n));assert.ok(rows.length,prefix);return {min:[0,1,2].map(i=>Math.min(...rows.map(v=>v.min[i]))),max:[0,1,2].map(i=>Math.max(...rows.map(v=>v.max[i])))};}
+const close=(a,b)=>assert.ok(Math.abs(a-b)<.0001,`${a} != ${b}`);
+let referenceShafts;
+for(const width of [600,700,800])test(`${width} mm: French doors, coordinated cabinets, robot opening, fixed shafts and matching navigation`,()=>{
+ const k=options[width],{b,g}=model(k.model),nav=JSON.parse(read(k.navigation));
+ assert.equal(nav.model_sha256,createHash('sha256').update(b).digest('hex'));
+ const fridge=merged(g,'法式冰箱箱体'),pantry=merged(g,'冰箱旁窄高柜'),counter=merged(g,'窗侧钢台面');
+ close(fridge.max[1]-fridge.min[1],width/1000);close(fridge.min[1]-counter.max[1],.01);close(pantry.min[1]-fridge.max[1],.02);close(pantry.max[1],2.46);
+ close(counter.min[1],.86);close(counter.max[1]-counter.min[1],k.robot_width_mm/1000);close(pantry.max[1]-pantry.min[1],k.pantry_width_mm/1000);close(pantry.max[2],2.4);
+ const doors=g.nodes.filter(n=>n.name?.startsWith('法式冰箱冷藏门')&&!n.name.includes('把手')),drawers=g.nodes.filter(n=>n.name?.startsWith('法式冰箱冷冻抽屉'));
+ assert.equal(doors.length,2);assert.equal(drawers.length,2);
+ for(const n of doors)assert.ok(bounds(g,n).min[2]>.80);
+ for(const n of drawers)close(bounds(g,n).max[1]-bounds(g,n).min[1],width/1000-.01);
+ assert.ok(!g.nodes.some(n=>n.name?.startsWith('冰箱对开门')));
+ const panels=g.nodes.filter(n=>n.name?.startsWith('扫地机洞口侧封板')).map(n=>bounds(g,n)).sort((a,b)=>a.min[1]-b.min[1]);
+ close(panels[1].min[1]-panels[0].max[1],.430);
+ const dock=merged(g,'扫地机自动上下水基站');assert.ok(dock.min[1]>panels[0].max[1]&&dock.max[1]<panels[1].min[1]);close(dock.max[1]-dock.min[1],.381);
+ const shafts=g.nodes.filter(n=>n.extras?.category==='ServiceEnclosures').map(n=>[n.name,bounds(g,n)]).sort((a,b)=>a[0].localeCompare(b[0]));
+ if(referenceShafts)assert.deepEqual(shafts,referenceShafts);else referenceShafts=shafts;
+ for(const p of Object.values(nav.starts))assert.ok(isWalkable(nav,p.x,p.y));
+ const center={x:3.6,y:(fridge.min[1]+fridge.max[1])/2};assert.equal(isWalkable(nav,center.x,center.y),false);assert.equal(isWalkable(navigationMode(nav,true),center.x,center.y),true);
+});

@@ -1,0 +1,118 @@
+{
+  "kitchen_counter_clear_mm": 960.0,
+  "entry_clear_mm": 1004.0,
+  "dining_west_route_mm": 771.5,
+  "desk_rear_conservative_mm": 797.7,
+  "bed_foot_min_mm": 635.0,
+  "guest_storage_front_mm": 854.0,
+  "kitchen_wall_cabinets": 0,
+  "front_panels_with_inspection_toggle": 77,
+  "triangle_counter_outline_mm": [
+    [
+      3710,
+      3935
+    ],
+    [
+      4380,
+      3935
+    ],
+    [
+      3750,
+      4600
+    ],
+    [
+      3710,
+      4600
+    ]
+  ],
+  "entry_run_height_mm": 2400.0,
+  "entry_run_length_mm": 3230.0,
+  "entry_modules": [
+    {
+      "id": "A",
+      "name": "玄关通顶柜A日常鞋",
+      "y_mm": [
+        1180,
+        1780
+      ],
+      "width_mm": 600,
+      "room": "entry",
+      "use": "底部常穿鞋位；中部日常鞋；顶层换季鞋盒"
+    },
+    {
+      "id": "B",
+      "name": "玄关通顶柜B归家",
+      "y_mm": [
+        1780,
+        2380
+      ],
+      "width_mm": 600,
+      "room": "entry",
+      "use": "下部鞋履；950–1550 高随手凹位含镜面挂钩；上部随身物品"
+    },
+    {
+      "id": "C",
+      "name": "玄关通顶柜C长靴雨伞",
+      "y_mm": [
+        2380,
+        3000
+      ],
+      "width_mm": 620,
+      "room": "entry",
+      "use": "长靴、独立干伞托盘格、可调鞋层与备品"
+    },
+    {
+      "id": "D",
+      "name": "玄关通顶柜D通勤备品",
+      "y_mm": [
+        3000,
+        3650
+      ],
+      "width_mm": 650,
+      "room": "entry",
+      "use": "通勤包与分盒日用品；顶层低频收纳"
+    },
+    {
+      "id": "E",
+      "name": "餐边通顶柜E",
+      "y_mm": [
+        3650,
+        4410
+      ],
+      "width_mm": 760,
+      "room": "dining",
+      "use": "下部餐具移门、浅抽屉；900 高餐边台面；上部杯碟与低频餐具"
+    }
+  ],
+  "entry_soffit_underside_mm": 2400.0,
+  "entry_soffit_drop_mm": 320.0,
+  "sideboard_width_mm": 760,
+  "entry_sideboard_partition_full_height": true,
+  "old_entry_bench_or_low_sideboard": 0,
+  "tv_screen_width_mm": 1439.0,
+  "tv_screen_height_mm": 809.4,
+  "tv_screen_diagonal_inches": 65.0,
+  "tv_center_height_mm": 1120.0,
+  "old_tv_cabinet_or_wall_tv": 0,
+  "tv_stand_base_mm": [
+    540.0,
+    820.0,
+    25.0
+  ],
+  "coffee_tables": 0,
+  "handcraft_desktop_mm": [
+    560.0,
+    1280.0,
+    30.0
+  ],
+  "store_cad_envelope_mm": [
+    1530,
+    850
+  ],
+  "store_closed_door_panels": 2,
+  "study_monitors": 1,
+  "robot_room": "kitchen",
+  "service_meshes": 17,
+  "mesh_count": 2266,
+  "embedded_images": 2
+}

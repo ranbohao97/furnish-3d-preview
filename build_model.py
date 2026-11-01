@@ -6,6 +6,9 @@ from mathutils.geometry import tessellate_polygon
 
 ROOT=Path(__file__).resolve().parent
 OUTPUT=Path(os.environ.get('MODEL_OUTPUT_DIR',ROOT/'generated'));OUTPUT.mkdir(parents=True,exist_ok=True)
+sys.path.insert(0,str(ROOT))
+from kitchen_config import layout,build_zone
+KITCHEN=layout(int(os.environ.get('FRIDGE_WIDTH_MM','700')))
 D=json.loads((ROOT/'model-data.json').read_text())
 random.seed(603)
 bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
@@ -480,21 +483,10 @@ box('水槽下分类桶',(2.14,2.78,.31),(.32,.27,.36),'ivory','Storage','kitche
 rect('厨房转角封板',2.10,2.39,.84,1.17,.10,.85,'walnut','Storage','kitchen')
 rect('厨房转角连续钢台面',2.10,2.39,.84,1.17,.85,.88,'steel','Furniture','kitchen')
 cabinet('灶下橱柜',2.10,3.28,.24,.84,.85,'y+','walnut','kitchen',drawers=True)
-# Automatic-water robot dock under window; 430 x 300 mm clear front opening.
-rect('扫地机设备柜背板',3.94,3.97,.86,1.50,.02,.85,'walnut','Storage','kitchen')
-for yy in (.86,1.48):rect('扫地机设备柜侧板',3.37,3.94,yy,yy+.02,.02,.85,'walnut','Storage','kitchen')
-rect('扫地机设备柜上隔板',3.37,3.94,.88,1.48,.34,.36,'walnut','Storage','kitchen')
-for ya,yb in [(.88,.96),(1.39,1.48)]:rect('扫地机洞口侧封板',3.35,3.37,ya,yb,.02,.34,'walnut','Storage','kitchen')
-o=rect('扫地机设备柜检修门',3.35,3.37,.88,1.48,.36,.84,'walnut','Storage','kitchen');o['front_panel']=True
-box('扫地机自动上下水基站',(3.70,1.175,.1445),(.450,.381,.249),'white','Appliances','kitchen',.018)
-cyl('扫地机器人归位',(3.48,1.175,.070),.165,.100,'white','Appliances','kitchen',48)
-rect('扫地机防水托盘',3.38,3.94,.91,1.44,.016,.025,'steel','Appliances','kitchen')
-# Narrow tall pantry in front of the boxed stack, divided for daily / spare items.
-cabinet('冰箱旁窄高柜下区',3.37,3.71,2.23,2.46,1.20,'x-','walnut','kitchen')
-cabinet('冰箱旁窄高柜上区',3.37,3.71,2.23,2.46,2.40,'x-','walnut','kitchen',base=1.20)
+# Configurable French fridge, adjacent pantry and robot cabinet share one run.
+build_zone(globals(),KITCHEN)
 rect('灶侧钢台面',2.08,3.30,.23,.86,.85,.88,'steel','Furniture','kitchen')
 rect('管井前钢台面',3.30,3.97,.62,.86,.85,.88,'steel','Furniture','kitchen')
-rect('窗侧钢台面',3.35,3.99,.86,1.50,.85,.88,'steel','Furniture','kitchen')
 # Sink opening split into four strips, leaving a genuine recess.
 for b in [(1.79,2.39,1.17,2.10),(1.79,2.39,2.72,2.97),(1.79,1.87,2.10,2.72),(2.31,2.39,2.10,2.72)]:
     rect('岛台不锈钢台面',*b,.85,.88,'steel','Furniture','kitchen')
@@ -523,14 +515,11 @@ service(tube('烟机接入烟道示意',[(2.88,.41,2.48),(3.75,.41,2.48)],.09,'s
 # Supply/drain routes are proposals, not surveyed construction drawings.
 for name,pts,r,kind,room in [
  ('厨房水槽排水支管示意',[(1.90,2.41,.35),(1.90,2.41,-.04),(2.22,2.41,-.04),(2.22,.70,-.04),(3.42,.70,-.04),(3.42,.43,.20)],.025,'drain','kitchen'),
- ('扫地机排水接入示意',[(3.92,1.17,.23),(3.92,1.17,.33),(3.88,.70,.33),(3.42,.70,.33),(3.42,.43,.33)],.012,'drain','kitchen'),
- ('扫地机冷水支管示意',[(3.92,1.21,.20),(3.92,1.21,.58),(3.48,.70,.58),(3.48,.43,.58)],.008,'supply','kitchen'),
  ('主卫马桶排水支管示意',[(9.10,4.32,-.04),(9.43,4.32,-.04),(9.43,3.25,-.04)],.055,'drain','masterbath'),
  ('主卫台盆排水支管示意',[(9.25,5.20,.62),(9.25,5.20,-.04),(9.43,5.20,-.04),(9.43,3.45,-.04)],.025,'drain','masterbath'),
  ('客卫马桶排水支管示意',[(4.10,3.27,-.04),(3.82,3.27,-.04),(3.82,2.85,-.04)],.055,'drain','guestbath'),
  ('客卫洗手台排水支管示意',[(3.94,4.15,.58),(3.94,4.15,-.04),(3.82,4.15,-.04),(3.82,3.04,-.04)],.025,'drain','guestbath')]:
  service(tube(name,pts,r,'blue' if kind=='supply' else 'white','Services',room),kind,'Proposed branch route; verify on site')
-box('扫地机供水检修阀',(3.90,1.21,.58),(.035,.055,.055),'blue','Appliances','kitchen')
 # Keep kitchen cabinetry outside the full-height shafts.
 # Tile backsplash with explicit grout, no full-wall stone.
 rect('厨房砖缝基层',2.10,3.95,.238,.251,.89,1.65,'grout','Furniture','kitchen')
@@ -539,11 +528,6 @@ for i in range(12):
     xx=2.10+i*.154;zz=.89+j*.152
     rect('厨房小方砖',xx,xx+.150,.251,.259,zz,zz+.148,'tile','Furniture','kitchen',.002)
 # No wall cabinets or floating shelves over the kitchen worktop.
-# Refrigerator occupies the CAD fridge block on east run.
-rect('冰箱箱体',3.37,3.97,1.51,2.21,0,1.91,'fridge_white','Appliances','kitchen',.035)
-for y1,y2 in [(1.52,1.855),(1.865,2.20)]:
-    rect('冰箱对开门',3.345,3.37,y1,y2,.04,1.89,'fridge_white','Appliances','kitchen',.014)
-    tube('冰箱把手',[(3.325,(y1+y2)/2,.95),(3.325,(y1+y2)/2,1.42)],.009,'steel',room='kitchen')
 rect('洗碗机箱体',1.82,2.37,1.20,1.78,.10,.82,'steel','Appliances','kitchen')
 rect('洗碗机面板',2.395,2.42,1.20,1.78,.10,.81,'steel','Appliances','kitchen')
 rect('洗碗机黑色控制条',2.422,2.426,1.21,1.77,.73,.79,'black','Appliances','kitchen')
@@ -832,7 +816,7 @@ CAMS={
  '08_玄关通顶柜':camera('08 玄关通顶柜',(3.10,2.78,1.64),(.52,2.80,1.37),22),
  '10_玄关柜内分区':camera('10 玄关柜内分区',(3.10,2.78,1.64),(.52,2.80,1.37),22),
  '09_三角洗手台':camera('09 三角洗手台',(4.96,4.91,1.62),(3.92,4.16,.89),30),
- '14_厨房高柜与白桃配色':camera('14 厨房高柜与白桃配色',(2.25,2.80,1.40),(3.58,1.95,1.20),24),
+ '14_厨房法式冰箱':camera('14 厨房法式冰箱',(2.0,3.05,1.50),(3.6,1.8,1.15),21),
  '12_手工桌':camera('12 手工桌',(4.55,6.7,1.55),(5.98,7.78,1.15),22),
  '13_储物柜':camera('13 储物柜',(4.80,4.45,1.45),(6.42,4.76,1.2),22),
  '07_主卫':camera('07 主卫',(8.68,5.56,1.58),(9.00,4.0,1.0),18),
@@ -845,7 +829,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='中古 / 包豪斯 · 厨房窄高柜 / 富士白配色 v8'
+scene['Project']='中古 / 包豪斯 · 法式冰箱 / 三档宽度联动 v9'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'
@@ -857,7 +841,7 @@ curves=[o for o in bpy.data.objects if o.type=='CURVE']
 for o in curves:o.select_set(True)
 if curves:
     bpy.context.view_layer.objects.active=curves[0];bpy.ops.object.convert(target='MESH')
-bpy.ops.export_scene.gltf(filepath=str(ROOT/'home-model.glb'),export_format='GLB',export_extras=True,export_cameras=False,export_lights=False,export_apply=True,export_yup=True)
+bpy.ops.export_scene.gltf(filepath=str(ROOT/os.environ.get('MODEL_FILENAME','home-model.glb')),export_format='GLB',export_extras=True,export_cameras=False,export_lights=False,export_apply=True,export_yup=True)
 print('MODEL_SAVED',len(bpy.data.objects),flush=True)
 render_views=os.environ.get('MODEL_RENDER_VIEWS','01_全屋轴测,06_全屋俯视,02_客厅与双人工位,03_餐厨,04_主卧,05_次卧,07_主卫,08_玄关通顶柜,09_三角洗手台,10_玄关柜内分区,11_65英寸电视支架').split(',')
 for name in filter(None,render_views):

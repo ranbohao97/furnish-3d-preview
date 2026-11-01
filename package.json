@@ -1,11 +1,11 @@
 {
   "name": "furnish-3d-preview",
-  "version": "8.0.0",
+  "version": "9.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node --test navigation.test.js"
+    "test": "node --test navigation.test.js kitchen-options.test.js"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

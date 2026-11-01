@@ -1,6 +1,7 @@
 from pathlib import Path
-import struct,json,itertools,numpy as np
-r=Path(__file__).resolve().parent;b=(r/'home-model.glb').read_bytes();n=struct.unpack_from('<I',b,12)[0];g=json.loads(b[20:20+n]);rows=[]
+import struct,json,itertools,numpy as np, argparse
+args=argparse.ArgumentParser();args.add_argument('--model',default='home-model.glb');args.add_argument('--output',default='geometry-checks.json');args=args.parse_args()
+r=Path(__file__).resolve().parent;b=(r/args.model).read_bytes();n=struct.unpack_from('<I',b,12)[0];g=json.loads(b[20:20+n]);rows=[]
 for nd in g['nodes']:
  if 'mesh'not in nd:continue
  t=np.array(nd.get('translation',[0,0,0]));scale=np.array(nd.get('scale',[1,1,1]));x,y,z,w=nd.get('rotation',[0,0,0,1]);R=np.array([[1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w)],[2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w)],[2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)]])
@@ -70,5 +71,5 @@ checks['mesh_count']=len(g['meshes']);checks['embedded_images']=len(g.get('image
 assert checks['kitchen_wall_cabinets']==0
 assert abs(checks['kitchen_counter_clear_mm']-960)<.5
 assert checks['entry_clear_mm']>=1000 and checks['dining_west_route_mm']>=750 and checks['bed_foot_min_mm']>=630 and checks['guest_storage_front_mm']>=840
-(r/'geometry-checks.json').write_text(json.dumps(checks,ensure_ascii=False,indent=2))
+(r/args.output).write_text(json.dumps(checks,ensure_ascii=False,indent=2))
 print(json.dumps(checks,ensure_ascii=False,indent=2))

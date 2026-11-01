@@ -2,7 +2,12 @@ import * as THREE from './three.module.min.js';
 import {OrbitControls} from './OrbitControls.js';
 import {GLTFLoader} from './GLTFLoader.js';
 import {createWalkthrough} from './walkthrough.js';
-import navigation from './navigation.json';
+import nav700 from './navigation.json';
+import nav600 from './navigation-600.json';
+import nav800 from './navigation-800.json';
+import kitchenOptions from './kitchen-options.json';
+const navOptions={600:nav600,700:nav700,800:nav800};
+const navigation={...nav700};
 import {RoomEnvironment} from './RoomEnvironment.js';
 
 const $=id=>document.getElementById(id),host=$('stage');
@@ -30,7 +35,7 @@ const views={
  plan:{p:[4.9,5.1,18.7],t:[4.9,5.1,0],fov:36,title:'俯视布局',note:'上方为南向窗面。可打开 CAD 线稿，核对家具与墙体平面。',cut:true},
  tv:{p:[2.45,5.70,1.40],t:[.56,7.06,1.0],fov:67,title:'客厅 · 65英寸落地电视',note:'65英寸 16:9 屏幕，中心约高 1120 mm；取消电视柜和茶几，改用黑色落地支架与小型回音壁托盘。'},
  living:{p:[1.12,4.55,1.55],t:[3.2,8.15,1.15],fov:76,title:'客厅 · 双人工位',note:'炭黑皮沙发、木质长桌、管状金属与少量砖红点缀。南侧保留低梁。'},
- fridge:{p:[2.25,2.80,1.40],t:[3.58,1.95,1.20],fov:76,title:'厨房 · 高柜与白桃配色',note:'冰箱旁改为 2400 mm 窄高柜，上下分区；保留后方包管。冰箱参考东芝大白桃富士白，仅调整配色，外形尺寸沿用概念模型。'},
+ fridge:{p:[2.0,3.05,1.50],t:[3.6,1.8,1.15],fov:82,title:'厨房 · 法式冰箱',note:'上部双开门、下部双抽屉；选择宽度时，旁侧高柜、扫地机柜和台面一起调整。'},
  robot:{p:[2.66,1.40,1.10],t:[3.75,1.17,.55],fov:80,title:'厨房 · 扫地机设备柜',note:'窗下柜预留自动上下水基站、430 mm 净宽洞口和上方检修门。高亮管道可查看暂定供排水接入。'},
  craft:{p:[4.55,6.7,1.55],t:[5.98,7.78,1.15],fov:75,title:'手工桌 · 小吊柜',note:'桌面 1280 × 560 mm，高 750 mm；上柜深 280 mm，台下留坐姿空间，缝纫机移至此处。'},
  store:{p:[4.80,4.45,1.45],t:[6.42,4.76,1.2],fov:78,title:'封闭储物柜',note:'CAD 围合约 1530 × 850 mm；长边浅层板、双扇柜门。勾选“查看柜内分区”可检查内部。'},
@@ -104,42 +109,75 @@ renderer.domElement.addEventListener('pointerup',e=>{
  if(hit){let n=hit.object;while(n.parent&&!n.userData.category)n=n.parent;
  $('selection').textContent=n.name.replace(/_\d+$/,'');$('selection').hidden=false;}
 });
-function error(message){$('loading').classList.add('failed');$('loading-text').textContent=message;}
-let modelBytes;
+let modelBytes,activeWidth=700,retryWidth=700;
+const modelCache=new Map();
 $('download').disabled=true;
-async function loadModel(){
- try {
-  const response=await fetch(window.MODEL_URL);
-  if(!response.ok)throw new Error(`HTTP ${response.status}`);
-  const buffer=await response.arrayBuffer();
-  const g=await new GLTFLoader().parseAsync(buffer,'');
-  modelBytes=new Uint8Array(buffer);model=g.scene;scene.add(model);
-  model.traverse(o=>{if(o.isMesh){meshCount++;o.castShadow=true;o.receiveShadow=true;
-   const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.name==='透明玻璃'){m.transparent=true;m.opacity=.18;m.depthWrite=false;}m.envMapIntensity=.8;});
-  }});
-  setView('overview',true);$('loading').hidden=true;$('download').disabled=false;$('walk-start').disabled=false;
-  $('status').textContent='模型已就绪 · v8';window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
- }catch(e){error('模型加载失败，请检查网络后刷新：'+e.message)}
+function describeKitchen(width){
+ const k=kitchenOptions[width];
+ $('config-status').textContent=`冰箱 ${width} · 高柜 ${k.pantry_width_mm} · 扫地机柜 ${k.robot_width_mm} mm`;
+ views.fridge.note=`富士白法式门：上双门、下双抽屉。冰箱宽 ${width} mm；旁侧高柜 ${k.pantry_width_mm} mm，扫地机柜 ${k.robot_width_mm} mm，进出洞口保持 430 mm。`;
+ if(current==='fridge')$('view-note').textContent=views.fridge.note;
 }
-loadModel();
+async function loadModel(width=700){
+ width=Number(width);if(!kitchenOptions[width])width=700;
+ retryWidth=width;$('config-retry').hidden=true;
+ $('fridge-width').disabled=true;$('walk-start').disabled=true;$('download').disabled=true;
+ $('loading').hidden=false;$('loading').classList.remove('failed');
+ $('loading-text').textContent=`正在载入 ${width} mm 法式冰箱及配套橱柜`;
+ $('config-status').textContent=`正在切换到 ${width} mm…`;
+ try {
+  let entry=modelCache.get(width);
+  if(!entry){
+   const response=await fetch(window.MODEL_VARIANTS[width]);
+   if(!response.ok)throw new Error(`HTTP ${response.status}`);
+   const buffer=await response.arrayBuffer();
+   const g=await new GLTFLoader().parseAsync(buffer,'');
+   let count=0;
+   g.scene.traverse(o=>{if(o.isMesh){count++;o.castShadow=true;o.receiveShadow=true;
+    const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.name==='透明玻璃'){m.transparent=true;m.opacity=.18;m.depthWrite=false;}m.envMapIntensity=.8;});
+   }});
+   entry={scene:g.scene,bytes:new Uint8Array(buffer),count};modelCache.set(width,entry);
+  }
+  const first=!model;if(model)scene.remove(model);
+  model=entry.scene;modelBytes=entry.bytes;meshCount=entry.count;scene.add(model);
+  Object.assign(navigation,navOptions[width]);activeWidth=width;
+  $('fridge-width').value=String(width);describeKitchen(width);
+  if(first)setView('overview',true);else updateLayers();
+  $('loading').hidden=true;$('selection').hidden=true;
+  $('status').textContent=`模型已就绪 · v9 · ${width} mm`;
+  window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
+  try{localStorage.setItem('home3d.fridge-width.v1',String(width));}catch{}
+ }catch(e){
+  $('config-status').textContent=`${width} mm 加载失败，${model?'已保留原配置。':'请检查网络。'}`;
+  $('fridge-width').value=String(activeWidth);$('config-retry').hidden=false;
+  if(model)$('loading').hidden=true;
+  else{$('loading').classList.add('failed');$('loading-text').textContent='模型加载失败，请在冰箱配置中点击重试。';}
+ }finally{
+  $('fridge-width').disabled=false;$('walk-start').disabled=!model;$('download').disabled=!model;
+ }
+}
+let savedWidth=700;try{const stored=Number(localStorage.getItem('home3d.fridge-width.v1'));if(kitchenOptions[stored])savedWidth=stored;}catch{}
+$('fridge-width').value=String(savedWidth);loadModel(savedWidth);
+$('fridge-width').addEventListener('change',e=>loadModel(e.target.value));
+$('config-retry').addEventListener('click',()=>loadModel(retryWidth));
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 for(const id of ['cut','roof','furniture','cad','internals','usage'])$(id).addEventListener('change',updateLayers);
 for(const id of ['pipes','walk-pipes'])$(id).addEventListener('change',()=>{const on=$(id).checked;$('pipes').checked=on;$('walk-pipes').checked=on;updateLayers();});
 $('reset').addEventListener('click',()=>setView(current));
 $('capture').addEventListener('click',()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='全屋_'+(walk?.active?'第一人称漫游':views[current].title)+'.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
-$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=modelBytes;const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download='全屋_全屋模型.glb';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=modelBytes;const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_法式冰箱${activeWidth}mm.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 $('info').addEventListener('click',()=>{walk?.pause();$('details').showModal()});$('close-info').addEventListener('click',()=>$('details').close());
 walk=createWalkthrough({camera,canvas:renderer.domElement,nav:navigation,host,
  onEnter(){
   const saved={position:camera.position.clone(),target:controls.target.clone(),fov:camera.fov,layers:{}};
-  move=null;controls.enabled=false;
+  move=null;controls.enabled=false;$('fridge-width').disabled=true;
   for(const id of ['cut','roof','furniture','cad','internals','usage']){saved.layers[id]=$(id).checked;$(id).disabled=true;}
   $('cut').checked=false;$('roof').checked=true;$('furniture').checked=true;$('cad').checked=false;$('internals').checked=false;$('usage').checked=false;updateLayers();
   $('view-title').textContent='第一人称漫游';$('view-note').textContent='从入户出发，用 WASD 行走。拖动画面转头，或启用鼠标自由转头。';
   camera.fov=72;camera.updateProjectionMatrix();return saved;
  },
  onExit(saved){
-  controls.enabled=true;camera.position.copy(saved.position);controls.target.copy(saved.target);camera.fov=saved.fov;camera.updateProjectionMatrix();
+  $('fridge-width').disabled=false;controls.enabled=true;camera.position.copy(saved.position);controls.target.copy(saved.target);camera.fov=saved.fov;camera.updateProjectionMatrix();
   for(const [id,value]of Object.entries(saved.layers)){$(id).checked=value;$(id).disabled=false;}updateLayers();
   $('view-title').textContent=views[current].title;$('view-note').textContent=views[current].note;
  }

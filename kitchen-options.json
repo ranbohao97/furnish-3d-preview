@@ -1,0 +1,44 @@
+{
+  "600": {
+    "width_mm": 600,
+    "robot_start": 0.86,
+    "robot_end": 1.5,
+    "robot_center": 1.18,
+    "fridge_start": 1.51,
+    "fridge_end": 2.11,
+    "pantry_start": 2.13,
+    "pantry_end": 2.46,
+    "robot_width_mm": 640,
+    "pantry_width_mm": 330,
+    "model": "home-model-600.glb",
+    "navigation": "navigation-600.json"
+  },
+  "700": {
+    "width_mm": 700,
+    "robot_start": 0.86,
+    "robot_end": 1.5,
+    "robot_center": 1.18,
+    "fridge_start": 1.51,
+    "fridge_end": 2.21,
+    "pantry_start": 2.23,
+    "pantry_end": 2.46,
+    "robot_width_mm": 640,
+    "pantry_width_mm": 230,
+    "model": "home-model.glb",
+    "navigation": "navigation.json"
+  },
+  "800": {
+    "width_mm": 800,
+    "robot_start": 0.86,
+    "robot_end": 1.4,
+    "robot_center": 1.13,
+    "fridge_start": 1.41,
+    "fridge_end": 2.21,
+    "pantry_start": 2.23,
+    "pantry_end": 2.46,
+    "robot_width_mm": 540,
+    "pantry_width_mm": 230,
+    "model": "home-model-800.glb",
+    "navigation": "navigation-800.json"
+  }
+}

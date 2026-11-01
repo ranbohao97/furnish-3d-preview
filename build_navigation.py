@@ -2,14 +2,15 @@
 No CAD walls or furniture are approximated by one global bounding box.
 """
 from pathlib import Path
-import json, struct, hashlib
+import json, struct, hashlib, argparse
 import numpy as np
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
 from shapely import contains_xy
 from collections import deque
 R=Path(__file__).resolve().parent
-blob=(R/'home-model.glb').read_bytes();size=struct.unpack_from('<I',blob,12)[0]
+args=argparse.ArgumentParser();args.add_argument('--model',default='home-model.glb');args.add_argument('--output',default='navigation.json');args=args.parse_args()
+blob=(R/args.model).read_bytes();size=struct.unpack_from('<I',blob,12)[0]
 g=json.loads(blob[20:20+size]);binary=blob[28+size:]
 def accessor(i):
  a=g['accessors'][i];v=g['bufferViews'][a['bufferView']]
@@ -65,5 +66,5 @@ for name,(x,y)in starts.items():
  ys,xs=np.where(free);k=np.argmin((xx[ys,xs]-x)**2+(yy[ys,xs]-y)**2);a,b=xs[k],ys[k]
  resolved[name]={'x':round(float(xx[b,a]),3),'y':round(float(yy[b,a]),3),'component':int(labels[b,a]),'connectedToEntry':bool(labels[b,a]==main)}
 data={'model_sha256':hashlib.sha256(blob).hexdigest(),'step':step,'radius':radius,'eyeHeight':1.6,'bodyTop':1.85,'width':nx,'height':ny,'rows':[''.join('.'if c else '#'for c in row)for row in free],'starts':resolved,'obstacleMeshes':included,'structureRows':[''.join('.'if c else '#'for c in row)for row in structure_free]}
-(R/'navigation.json').write_text(json.dumps(data,ensure_ascii=False,separators=(',',':'))+'\n')
+(R/args.output).write_text(json.dumps(data,ensure_ascii=False,separators=(',',':'))+'\n')
 print(json.dumps({'obstacleMeshes':included,'components':sorted([len(c)for c in components],reverse=True)[:10],'starts':resolved},ensure_ascii=False,indent=2))

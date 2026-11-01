@@ -1,8 +1,8 @@
-# 全屋三维预览 v8
+# 全屋三维预览 v9
 
 [打开在线预览](https://ranbohao97.github.io/furnish-3d-preview/)
 
-交互式全屋概念模型：厨房无吊柜、CAD 三角洗手台、3230 mm 玄关通顶柜（2470 mm 玄关收纳 + 760 mm 餐边区），以及按用途调整的柜内分区。客厅采用 65 英寸电视与落地支架，取消电视柜与客厅茶几。支持 WASD 第一人称漫游、16 个视角、剖切墙体、CAD 叠合、柜内查看、动线净距、截图与 GLB 下载。
+交互式全屋概念模型：厨房无吊柜、CAD 三角洗手台、3230 mm 玄关通顶柜（2470 mm 玄关收纳 + 760 mm 餐边区），以及按用途调整的柜内分区。客厅采用 65 英寸电视与落地支架，取消电视柜与客厅茶几。冰箱采用法式上双门、下双抽屉，支持 600 / 700 / 800 mm 宽度与邻柜联动。支持 WASD 第一人称漫游、16 个视角、剖切墙体、CAD 叠合、柜内查看、动线净距、截图与 GLB 下载。
 
 本仓库仅包含预览代码、模型与可复建的几何资料；原始 PDF / DWG、门牌信息、私人文档链接和装修业务资料不公开。
 
@@ -16,11 +16,12 @@ npm run build
 python3 -m http.server 8080
 ```
 
-打开 `http://localhost:8080`。此网络版本通过 HTTP 加载 `home-model.glb`，请不要直接双击 `index.html`。
+打开 `http://localhost:8080`。此网络版本通过 HTTP 按所选宽度加载对应 GLB，请不要直接双击 `index.html`。
 
 - `app.js` / `template.html`：交互与页面源代码。
 - `build.mjs`：构建脚本；生成 `index.html` 和 `app.bundle.js`。
-- `home-model.glb`：完整模型，大小与网格数量见 `geometry-checks.json`；移动网络首次加载可能较慢。
+- `home-model.glb` / `home-model-600.glb` / `home-model-800.glb`：700 / 600 / 800 mm 完整模型，每档约 16.3 MB，选择时按需加载并缓存。
+- `kitchen_config.py` / `kitchen-options.json`：厨房参数化建模与前端档位表；`kitchen-options.test.js` 验证实际 GLB 尺寸、分门、间隙及对应通行图。
 - `current-geometry.json`：CAD 提取的局部坐标图元，单位 mm。
 - `build_model.py` / `model-data.json` / `union_walls.py`：Blender 建模代码与参数。
 - `prepare_assets.py`：重新生成程序木纹和地板数据。
@@ -34,9 +35,16 @@ python3 -m http.server 8080
 ```sh
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+# 700 mm 默认档
 MODEL_PYTHON="$PWD/.venv/bin/python" blender -b --python build_model.py
 .venv/bin/python verify_geometry.py
 .venv/bin/python build_navigation.py
+# 600 / 800 mm 配置档
+for width in 600 800; do
+  FRIDGE_WIDTH_MM="$width" MODEL_FILENAME="home-model-$width.glb" MODEL_PYTHON="$PWD/.venv/bin/python" blender -b --python build_model.py
+  .venv/bin/python verify_geometry.py --model "home-model-$width.glb" --output "geometry-checks-$width.json"
+  .venv/bin/python build_navigation.py --model "home-model-$width.glb" --output "navigation-$width.json"
+done
 python3 build_entry_elevation.py
 npm test
 npm run build
@@ -52,7 +60,7 @@ npm run build
 
 - `walkthrough.js`：输入、转头、暂停与模式切换。
 - `navigation.js` / `navigation.test.js`：移动及防穿越检查；`npm test` 运行。
-- `build_navigation.py` / `navigation.json`：从 GLB 重建通行图。更换模型后必须重建；网页构建会校验模型 SHA-256，拒绝使用过期通行图。
+- `build_navigation.py` / `navigation*.json`：从各档 GLB 重建通行图。更换模型后必须重建；网页构建会校验模型 SHA-256，拒绝使用过期通行图。
 - [Pointer Lock API 说明](https://developer.mozilla.org/en-US/docs/Web/API/Element/requestPointerLock)：通过用户点击启用，不支持时使用拖动转头。
 
 ## GitHub Pages
@@ -91,3 +99,17 @@ npm run build
 ## v8 厨房高柜与冰箱配色
 
 冰箱旁原窄抽屉柜及钢台面改为 2400 mm 高柜，柜体宽 230 mm、深 340 mm（门板把手另计），上下分区、可调层板；后方包管保留。新增专用视角。冰箱改为参考东芝大白桃的富士白玻璃面板及银色把手，颜色为近似表现；保留原模型外形与占位，并未替换为厂家精确型号。配色来源：[美的集团官方商城大白桃 GR-RM479WE-PG1B3](https://www.midea.cn/1/1000000000400692349824.html)。
+
+## v9 法式冰箱与宽度配置
+
+左侧“法式冰箱宽度”可选三档，默认 700 mm，浏览器会记住最近一次成功选择。上部为两扇冷藏门，下部为两层整宽冷冻抽屉；延续富士白近似配色和银色把手。切换后保留当前视角与显示选项，导出的 GLB 和漫游通行图同步切换；进入漫游后先退出再修改尺寸。下载失败可重试，有已加载模型时保留原档。
+
+| 冰箱宽度 | 旁侧高柜宽度 | 扫地机柜宽度 |
+| --- | --- | --- |
+| 600 mm | 330 mm | 640 mm |
+| 700 mm | 230 mm | 640 mm |
+| 800 mm | 230 mm | 540 mm |
+
+三档共用 CAD 上 1600 mm 的布置区段。冰箱高 1910 mm、箱体深 600 mm；高柜高 2400 mm、深 340 mm。800 mm 档将扫地机柜收窄 100 mm，设备及示意支管一起移动 50 mm，430 mm 机器人洞口与基站尺寸保持不变。各档分别重建板件、台面、门板与把手，不缩放设备或固定包管。
+
+冰箱两侧现为 10 / 20 mm 概念间隙。三档用于空间比较，并非某一款东芝产品的可选尺寸；实际散热、开门、抽屉拉出和检修余量应按最终型号深化。
