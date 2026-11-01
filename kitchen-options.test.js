@@ -15,13 +15,16 @@ function bounds(g,n){
 }
 function merged(g,prefix){const rows=g.nodes.filter(n=>n.mesh!==undefined&&n.name.startsWith(prefix)).map(n=>bounds(g,n));assert.ok(rows.length,prefix);return {min:[0,1,2].map(i=>Math.min(...rows.map(v=>v.min[i]))),max:[0,1,2].map(i=>Math.max(...rows.map(v=>v.max[i])))};}
 const close=(a,b)=>assert.ok(Math.abs(a-b)<.0001,`${a} != ${b}`);
-let referenceShafts;
+let referenceShafts,referencePantry;
 for(const width of [600,700,800])test(`${width} mm: French doors, coordinated cabinets, robot opening, fixed shafts and matching navigation`,()=>{
  const k=options[width],{b,g}=model(k.model),nav=JSON.parse(read(k.navigation));
  assert.equal(nav.model_sha256,createHash('sha256').update(b).digest('hex'));
  const fridge=merged(g,'法式冰箱箱体'),pantry=merged(g,'冰箱旁窄高柜'),counter=merged(g,'窗侧钢台面');
  close(fridge.max[1]-fridge.min[1],width/1000);close(fridge.min[1]-counter.max[1],.01);close(pantry.min[1]-fridge.max[1],.02);close(pantry.max[1],2.46);
  close(counter.min[1],.86);close(counter.max[1]-counter.min[1],k.robot_width_mm/1000);close(pantry.max[1]-pantry.min[1],k.pantry_width_mm/1000);close(pantry.max[2],2.4);
+ close(pantry.min[1],2.23);close(pantry.max[1]-pantry.min[1],.23);close(counter.max[1]-counter.min[1],(1340-width)/1000);
+ const fixedPantry=g.nodes.filter(n=>n.mesh!==undefined&&n.name.startsWith('冰箱旁窄高柜')).map(n=>[n.name,bounds(g,n)]).sort((a,b)=>a[0].localeCompare(b[0]));
+ if(referencePantry)assert.deepEqual(fixedPantry,referencePantry);else referencePantry=fixedPantry;
  const doors=g.nodes.filter(n=>n.name?.startsWith('法式冰箱冷藏门')&&!n.name.includes('把手')),drawers=g.nodes.filter(n=>n.name?.startsWith('法式冰箱冷冻抽屉'));
  assert.equal(doors.length,2);assert.equal(drawers.length,2);
  for(const n of doors)assert.ok(bounds(g,n).min[2]>.80);

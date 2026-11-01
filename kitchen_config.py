@@ -2,7 +2,7 @@
 def layout(width_mm):
     if width_mm not in (600,700,800):raise ValueError('Choose 600, 700 or 800 mm')
     width=width_mm/1000
-    robot_end=1.50-max(0,width-.70)
+    robot_end=2.21-width-.01
     fridge_start=robot_end+.01
     fridge_end=fridge_start+width
     pantry_start=fridge_end+.02
