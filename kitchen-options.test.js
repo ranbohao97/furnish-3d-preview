@@ -26,7 +26,9 @@ for(const width of [600,700,800])test(`${width} mm: French doors, coordinated ca
  const fixedPantry=g.nodes.filter(n=>n.mesh!==undefined&&n.name.startsWith('冰箱旁窄高柜')).map(n=>[n.name,bounds(g,n)]).sort((a,b)=>a[0].localeCompare(b[0]));
  if(referencePantry)assert.deepEqual(fixedPantry,referencePantry);else referencePantry=fixedPantry;
  const doors=g.nodes.filter(n=>n.name?.startsWith('法式冰箱冷藏门')&&!n.name.includes('把手')),drawers=g.nodes.filter(n=>n.name?.startsWith('法式冰箱冷冻抽屉'));
- assert.equal(doors.length,2);assert.equal(drawers.length,2);
+ assert.equal(doors.length,width===600?1:2);assert.equal(drawers.length,2);
+ if(width===600)close(bounds(g,doors[0]).max[1]-bounds(g,doors[0]).min[1],.59);
+ assert.equal(g.nodes.filter(n=>n.name?.startsWith('法式冰箱冷藏门把手')).length,width===600?1:2);
  for(const n of doors)assert.ok(bounds(g,n).min[2]>.80);
  for(const n of drawers)close(bounds(g,n).max[1]-bounds(g,n).min[1],width/1000-.01);
  assert.ok(!g.nodes.some(n=>n.name?.startsWith('冰箱对开门')));

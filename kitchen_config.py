@@ -32,14 +32,25 @@ def build_zone(api,k):
     box('扫地机供水检修阀',(3.90,c+.035,.58),(.035,.055,.055),'blue','Appliances','kitchen')
     for title,z0,z1 in [('下区',.10,1.20),('上区',1.20,2.40)]:
         cabinet('冰箱旁窄高柜'+title,3.37,3.71,k['pantry_start'],k['pantry_end'],z1,'x-','walnut','kitchen',base=z0)
-    # French-door style: upper paired doors and two full-width freezer drawers.
-    lo,hi=k['fridge_start'],k['fridge_end'];mid=(lo+hi)/2
+    # 600 mm has one upper door; larger options have paired doors.
+    lo,hi=k['fridge_start'],k['fridge_end']
     body=rect('法式冰箱箱体',3.37,3.97,lo,hi,0,1.91,'fridge_white','Appliances','kitchen',.025)
-    body['fridge_width_mm']=k['width_mm'];body['door_style']='French: upper pair + two drawers'
+    body['fridge_width_mm']=k['width_mm'];body['door_style']='Single upper door + two drawers' if k['width_mm']==600 else 'French: upper pair + two drawers'
+    build_cold_doors(api,k)
+    for z1,z2 in [(.04,.405),(.42,.785)]:
+        rect('法式冰箱冷冻抽屉',3.341,3.37,lo+.005,hi-.005,z1,z2,'fridge_white','Appliances','kitchen',.008)
+        tube('法式冰箱抽屉把手',[(3.317,lo+.09,z2-.045),(3.317,hi-.09,z2-.045)],.009,'steel','Appliances','kitchen')
+
+def build_cold_doors(api,k):
+    rect,tube=api['rect'],api['tube']
+    lo,hi=k['fridge_start'],k['fridge_end'];mid=(lo+hi)/2
+    if k['width_mm']==600:
+        rect('法式冰箱冷藏门',3.345,3.37,lo+.005,hi-.005,.805,1.895,'fridge_white','Appliances','kitchen',.008)
+        # Single handle at the pantry-side free edge; hinge towards the window.
+        yy=hi-.045
+        tube('法式冰箱冷藏门把手',[(3.322,yy,.89),(3.322,yy,1.30)],.008,'steel','Appliances','kitchen')
+        return
     for i,(y1,y2) in enumerate([(lo+.005,mid-.004),(mid+.004,hi-.005)]):
         rect('法式冰箱冷藏门',3.345,3.37,y1,y2,.805,1.895,'fridge_white','Appliances','kitchen',.008)
         yy=mid+(-.045 if i==0 else .045)
         tube('法式冰箱冷藏门把手',[(3.322,yy,.89),(3.322,yy,1.30)],.008,'steel','Appliances','kitchen')
-    for z1,z2 in [(.04,.405),(.42,.785)]:
-        rect('法式冰箱冷冻抽屉',3.341,3.37,lo+.005,hi-.005,z1,z2,'fridge_white','Appliances','kitchen',.008)
-        tube('法式冰箱抽屉把手',[(3.317,lo+.09,z2-.045),(3.317,hi-.09,z2-.045)],.009,'steel','Appliances','kitchen')

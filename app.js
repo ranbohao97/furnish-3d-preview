@@ -35,7 +35,7 @@ const views={
  plan:{p:[4.9,5.1,18.7],t:[4.9,5.1,0],fov:36,title:'俯视布局',note:'上方为南向窗面。可打开 CAD 线稿，核对家具与墙体平面。',cut:true},
  tv:{p:[2.45,5.70,1.40],t:[.56,7.06,1.0],fov:67,title:'客厅 · 65英寸落地电视',note:'65英寸 16:9 屏幕，中心约高 1120 mm；取消电视柜和茶几，改用黑色落地支架与小型回音壁托盘。'},
  living:{p:[1.12,4.55,1.55],t:[3.2,8.15,1.15],fov:76,title:'客厅 · 双人工位',note:'炭黑皮沙发、木质长桌、管状金属与少量砖红点缀。南侧保留低梁。'},
- fridge:{p:[2.0,3.05,1.50],t:[3.6,1.8,1.15],fov:82,title:'厨房 · 法式冰箱',note:'上部双开门、下部双抽屉；选择宽度时，左侧高柜固定，仅靠窗的扫地机柜和台面随冰箱宽度调整。'},
+ fridge:{p:[2.0,3.05,1.50],t:[3.6,1.8,1.15],fov:82,title:'厨房 · 冰箱配置',note:'600 mm 上部单开门，700 / 800 mm 上部双开门；下部均为双抽屉。选择宽度时，左侧高柜固定，仅靠窗的扫地机柜和台面随冰箱宽度调整。'},
  robot:{p:[2.66,1.40,1.10],t:[3.75,1.17,.55],fov:80,title:'厨房 · 扫地机设备柜',note:'窗下柜预留自动上下水基站、430 mm 净宽洞口和上方检修门。高亮管道可查看暂定供排水接入。'},
  craft:{p:[4.55,6.7,1.55],t:[5.98,7.78,1.15],fov:75,title:'手工桌 · 小吊柜',note:'桌面 1280 × 560 mm，高 750 mm；上柜深 280 mm，台下留坐姿空间，缝纫机移至此处。'},
  store:{p:[4.80,4.45,1.45],t:[6.42,4.76,1.2],fov:78,title:'封闭储物柜',note:'CAD 围合约 1530 × 850 mm；长边浅层板、双扇柜门。勾选“查看柜内分区”可检查内部。'},
@@ -115,7 +115,7 @@ $('download').disabled=true;
 function describeKitchen(width){
  const k=kitchenOptions[width];
  $('config-status').textContent=`冰箱 ${width} · 高柜 ${k.pantry_width_mm} · 扫地机柜 ${k.robot_width_mm} mm`;
- views.fridge.note=`富士白法式门：上双门、下双抽屉。冰箱宽 ${width} mm；左侧高柜固定 ${k.pantry_width_mm} mm，窗侧柜 ${k.robot_width_mm} mm，进出洞口保持 430 mm。`;
+ views.fridge.note=`富士白冰箱：${width===600?'上单门':'上双门'}、下双抽屉。冰箱宽 ${width} mm；左侧高柜固定 ${k.pantry_width_mm} mm，窗侧柜 ${k.robot_width_mm} mm，进出洞口保持 430 mm。`;
  if(current==='fridge')$('view-note').textContent=views.fridge.note;
 }
 async function loadModel(width=700){
@@ -123,7 +123,7 @@ async function loadModel(width=700){
  retryWidth=width;$('config-retry').hidden=true;
  $('fridge-width').disabled=true;$('walk-start').disabled=true;$('download').disabled=true;
  $('loading').hidden=false;$('loading').classList.remove('failed');
- $('loading-text').textContent=`正在载入 ${width} mm 法式冰箱及配套橱柜`;
+ $('loading-text').textContent=`正在载入 ${width} mm 冰箱及配套橱柜`;
  $('config-status').textContent=`正在切换到 ${width} mm…`;
  try {
   let entry=modelCache.get(width);
@@ -144,7 +144,7 @@ async function loadModel(width=700){
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   $('loading').hidden=true;$('selection').hidden=true;
-  $('status').textContent=`模型已就绪 · v9.2 · ${width} mm`;
+  $('status').textContent=`模型已就绪 · v9.3 · ${width} mm`;
   window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
   try{localStorage.setItem('home3d.fridge-width.v1',String(width));}catch{}
  }catch(e){
@@ -165,7 +165,7 @@ for(const id of ['cut','roof','furniture','cad','internals','usage'])$(id).addEv
 for(const id of ['pipes','walk-pipes'])$(id).addEventListener('change',()=>{const on=$(id).checked;$('pipes').checked=on;$('walk-pipes').checked=on;updateLayers();});
 $('reset').addEventListener('click',()=>setView(current));
 $('capture').addEventListener('click',()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='全屋_'+(walk?.active?'第一人称漫游':views[current].title)+'.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
-$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=modelBytes;const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_法式冰箱${activeWidth}mm.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=modelBytes;const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_冰箱${activeWidth}mm.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 $('info').addEventListener('click',()=>{walk?.pause();$('details').showModal()});$('close-info').addEventListener('click',()=>$('details').close());
 walk=createWalkthrough({camera,canvas:renderer.domElement,nav:navigation,host,
  onEnter(){
