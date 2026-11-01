@@ -39,6 +39,8 @@ def mat(name,hex,rough=.55,metal=0,texture=None):
         m.node_tree.links.new(t.outputs['Color'],p.inputs['Base Color'])
     return m
 M={
+ # Visual approximation of IKEA VEDDINGE white lacquer, not a manufacturer colour code.
+ 'kitchen_white':mat('维丁格白色漆面参考','F2F1EC',.48,0),
  'fridge_white':mat('冰箱富士白玻璃配色','F1F3F0',.20,.03),
  'wall':mat('暖白矿物涂料','E9E4D7',.82), 'ceiling':mat('顶面暖白','F3EEE4',.85),
  'walnut':mat('柚木色木饰面','965B30',.46,texture='walnut.jpg'), 'oak':mat('温润橡木地板','B38959',.6,texture='oak.jpg'),
@@ -60,6 +62,7 @@ lightmat=mat('乳白发光灯罩','FFF1CC',.5)
 p=lightmat.node_tree.nodes.get('Principled BSDF');p.inputs['Emission Color'].default_value=(1,.72,.38,1);p.inputs['Emission Strength'].default_value=.7;M['lamp']=lightmat
 
 def finish(o,name,m,cat='Furniture',room='shared',bevel=0,source='style interpretation'):
+    if room=='kitchen' and cat=='Storage' and m=='walnut':m='kitchen_white'
     tag(o,name,cat,room,source);o.data.materials.append(M[m] if isinstance(m,str) else m)
     if bevel:
         mod=o.modifiers.new('Soft manufactured edges','BEVEL');mod.width=bevel;mod.segments=3
@@ -829,7 +832,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='中古 / 包豪斯 · 法式冰箱 / 三档宽度联动 v9.1'
+scene['Project']='中古 / 包豪斯 · 法式冰箱 / 三档宽度联动 v9.2'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'

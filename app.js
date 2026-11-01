@@ -39,7 +39,7 @@ const views={
  robot:{p:[2.66,1.40,1.10],t:[3.75,1.17,.55],fov:80,title:'厨房 · 扫地机设备柜',note:'窗下柜预留自动上下水基站、430 mm 净宽洞口和上方检修门。高亮管道可查看暂定供排水接入。'},
  craft:{p:[4.55,6.7,1.55],t:[5.98,7.78,1.15],fov:75,title:'手工桌 · 小吊柜',note:'桌面 1280 × 560 mm，高 750 mm；上柜深 280 mm，台下留坐姿空间，缝纫机移至此处。'},
  store:{p:[4.80,4.45,1.45],t:[6.42,4.76,1.2],fov:78,title:'封闭储物柜',note:'CAD 围合约 1530 × 850 mm；长边浅层板、双扇柜门。勾选“查看柜内分区”可检查内部。'},
- kitchen:{p:[3.05,5.20,1.60],t:[2.20,1.55,1.08],fov:73,title:'餐厅 · 厨房',note:'无吊柜；水龙头按 CAD 调整至餐厅侧，操作面朝厨房。扫地机移入窗下设备柜，预留上下水与检修口。'},
+ kitchen:{p:[3.05,5.20,1.60],t:[2.20,1.55,1.08],fov:73,title:'餐厅 · 厨房',note:'维丁格白色漆面参考橱柜，无吊柜；水龙头按 CAD 调整至餐厅侧，操作面朝厨房。扫地机移入窗下设备柜，预留上下水与检修口。'},
  study:{p:[5.10,5.11,1.55],t:[3.8,7.7,1.1],fov:75,title:'双人工位',note:'靠下工位仅放笔记本，上侧保留显示器；沙发背后为带透光窗的装饰隔断，缝纫机移至手工桌。'},
  master:{p:[7.55,6.16,1.60],t:[8.65,8.30,1.10],fov:79,title:'主卧',note:'床尾浅柜采用正向抽拉挂衣；另一组保留长衣区。修正柜前误加墙及床头、梳妆台交叠。'},
  guest:{p:[5.58,3.61,1.55],t:[6.92,2.48,.72],fov:79,title:'弹性次卧',note:'2.0 × 0.9 米日床沿窗墙摆放，释放柜前空间；边几可移动。'},
@@ -144,7 +144,7 @@ async function loadModel(width=700){
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   $('loading').hidden=true;$('selection').hidden=true;
-  $('status').textContent=`模型已就绪 · v9.1 · ${width} mm`;
+  $('status').textContent=`模型已就绪 · v9.2 · ${width} mm`;
   window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
   try{localStorage.setItem('home3d.fridge-width.v1',String(width));}catch{}
  }catch(e){
