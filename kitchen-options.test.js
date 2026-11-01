@@ -40,3 +40,20 @@ for(const width of [600,700,800])test(`${width} mm: French doors, coordinated ca
  for(const p of Object.values(nav.starts))assert.ok(isWalkable(nav,p.x,p.y));
  const center={x:3.6,y:(fridge.min[1]+fridge.max[1])/2};assert.equal(isWalkable(nav,center.x,center.y),false);assert.equal(isWalkable(navigationMode(nav,true),center.x,center.y),true);
 });
+
+for(const width of [600,700,800])test(`${width} mm: balcony four-column glazing and both casements open outdoors`,()=>{
+ const {g}=model(options[width].model);
+ assert.ok(!g.nodes.some(n=>n.name?.startsWith('南向封窗')));
+ const outer=merged(g,'阳台四列外框');close(outer.max[0]-outer.min[0],4.56);close(outer.max[2]-outer.min[2],2.30);
+ const fixed=g.nodes.filter(n=>n.extras?.window_type==='fixed');assert.equal(fixed.length,4);
+ for(const n of fixed){const b=bounds(g,n);close((b.min[1]+b.max[1])/2,10.11);
+  if(n.name.startsWith('阳台F1')||n.name.startsWith('阳台F2')){close(b.min[2],.08);close(b.max[2],2.28);assert.equal(n.extras.nominal_column_mm,1600);}
+  else {close(b.max[2],1.005);assert.equal(n.extras.nominal_column_mm,700);}
+ }
+ const mullions=g.nodes.filter(n=>n.name?.startsWith('阳台四列竖梃')).map(n=>bounds(g,n)).sort((a,b)=>a.min[0]-b.min[0]);assert.equal(mullions.length,3);
+ const cuts=[1,...mullions.map(b=>(b.min[0]+b.max[0])/2),5.56];
+ for(let i=0;i<4;i++)close(cuts[i+1]-cuts[i],[700,1600,1600,700][i]/4600*4.56);
+ const sashes=g.nodes.filter(n=>n.name?.includes('外开扇玻璃'));assert.equal(sashes.length,2);
+ for(const n of sashes){const b=bounds(g,n);assert.equal(n.extras.opening_degrees,35);assert.ok(b.min[1]>10.11&&b.max[1]>10.40,`${n.name} must open to outdoor +Y`);assert.ok(b.min[2]>1.03);}
+ assert.equal(g.nodes.filter(n=>n.name?.startsWith('阳台边列上下分格横梃')).length,2);
+});

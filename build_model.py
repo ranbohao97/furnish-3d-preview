@@ -8,6 +8,7 @@ ROOT=Path(__file__).resolve().parent
 OUTPUT=Path(os.environ.get('MODEL_OUTPUT_DIR',ROOT/'generated'));OUTPUT.mkdir(parents=True,exist_ok=True)
 sys.path.insert(0,str(ROOT))
 from kitchen_config import layout,build_zone
+from balcony_window import build_balcony_window
 KITCHEN=layout(int(os.environ.get('FRIDGE_WIDTH_MM','700')))
 D=json.loads((ROOT/'model-data.json').read_text())
 random.seed(603)
@@ -40,6 +41,7 @@ def mat(name,hex,rough=.55,metal=0,texture=None):
     return m
 M={
  # Visual approximation of IKEA VEDDINGE white lacquer, not a manufacturer colour code.
+ 'window_frame':mat('阳台浅灰铝框','B9BDBA',.38,.35),
  'kitchen_white':mat('维丁格白色漆面参考','F2F1EC',.48,0),
  'fridge_white':mat('冰箱富士白玻璃配色','F1F3F0',.20,.03),
  'wall':mat('暖白矿物涂料','E9E4D7',.82), 'ceiling':mat('顶面暖白','F3EEE4',.85),
@@ -222,7 +224,7 @@ def window(name,a,b,sill,top,panels=2):
     for i in range(panels):
         u=(i+.5)/panels
         box(name+'玻璃', (ax+dx*u,ay+dy*u,(sill+top)/2),(L/panels-.04,.012,top-sill-.04),'glass','Windows',bevel=0,rot=angle)
-window('南向封窗',(1,10.11),(5.56,10.11),.03,2.43,4)
+build_balcony_window(globals())
 window('洗烘区窗',(5.75,10.11),(6.21,10.11),.03,2.43,1)
 window('阳台侧高窗',(.88,8.70),(.88,9.34),1.23,2.50,1)
 window('主卧窗',(7.22,10.11),(9.54,10.11),.52,2.50,2)
@@ -244,8 +246,8 @@ def curtain(name,a,b,z0=.05,z1=2.56,material='ivory'):
     for p in mesh.polygons:p.use_smooth=True
     sol=o.modifiers.new('布料厚度','SOLIDIFY');sol.thickness=.002
     return o
-curtain('南窗纱帘左',(1.04,9.91),(1.75,9.91))
-curtain('南窗纱帘右',(5.02,9.91),(5.48,9.91))
+curtain('南窗纱帘左',(1.02,9.91),(1.18,9.91))
+curtain('南窗纱帘右',(5.38,9.91),(5.54,9.91))
 curtain('主卧遮光帘左',(7.24,9.88),(7.65,9.88),.56,2.56,'green')
 curtain('主卧遮光帘右',(9.08,9.88),(9.48,9.88),.56,2.56,'green')
 curtain('次卧窗帘左',(5.87,1.98),(6.13,1.98),.87,2.50)
@@ -832,7 +834,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='中古 / 包豪斯 · 法式冰箱 / 三档宽度联动 v9.3'
+scene['Project']='中古 / 包豪斯 · 法式冰箱 / 三档宽度联动 v10'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'

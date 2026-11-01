@@ -46,9 +46,10 @@ const views={
  bath:{p:[8.68,5.56,1.58],t:[9.00,4.0,1.0],fov:85,title:'主卫',note:'依当前平面保留淋浴与帘隔。旧需求中的浴缸尚未落实到这版图纸。'},
  entry:{p:[3.10,2.78,1.64],t:[.52,2.80,1.37],fov:65,title:'玄关 · 高柜与吊顶',note:'柜高 2400 mm，上方局部吊顶 320 mm。整排 3230 mm：鞋履、归家随手位、长靴雨伞、通勤备品；餐桌端留 760 mm 餐边区。勾选柜内分区查看。'},
  basin:{p:[4.96,4.91,1.62],t:[3.92,4.16,.89],fov:62,title:'客卫 · 三角洗手台',note:'按 CAD 三角轮廓重建台面与柜体，圆盆嵌入台面；斜面开门避开卫生间入口。'},
+ balcony:{p:[3.28,13.4,1.50],t:[3.28,10.11,1.18],fov:65,title:'阳台 · 四列外开封窗',note:'按图片 700 / 1600 / 1600 / 700 四列分格；中间两块通高固定玻璃，两侧上部向室外开启、下部固定。图示 4600 × 2300 mm，模型适配现有约 4560 mm 洞口；开扇展示 35°。'},
  laundry:{p:[3.9,9.3,1.55],t:[5.85,9.3,1.2],fov:70,title:'阳台 · 洗烘',note:'洗烘正面可操作；旁侧改为手工桌与小吊柜，扫地机器人移至厨房自动上下水设备柜。'}
 };
-function viewFov(v){if(current==='entry' && host.clientWidth/host.clientHeight<.8)return 100;return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
+function viewFov(v){if(current==='balcony' && host.clientWidth/host.clientHeight<.8)return 112;if(current==='entry' && host.clientWidth/host.clientHeight<.8)return 100;return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
 function setView(key,instant=false){
  if(walk?.active)walk.exit();
  const v=views[key];current=key;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('selected',b.dataset.view===key);b.setAttribute('aria-pressed',b.dataset.view===key)});
@@ -144,7 +145,7 @@ async function loadModel(width=700){
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   $('loading').hidden=true;$('selection').hidden=true;
-  $('status').textContent=`模型已就绪 · v9.3 · ${width} mm`;
+  $('status').textContent=`模型已就绪 · v10 · ${width} mm`;
   window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
   try{localStorage.setItem('home3d.fridge-width.v1',String(width));}catch{}
  }catch(e){
