@@ -9,6 +9,8 @@ import kitchenOptions from './kitchen-options.json';
 const navOptions={600:nav600,700:nav700,800:nav800};
 const navigation={...nav700};
 import {RoomEnvironment} from './RoomEnvironment.js';
+import {createLighting} from './lighting.js';
+import {setupViewerUI} from './viewer-ui.js';
 
 const $=id=>document.getElementById(id),host=$('stage');
 const scene=new THREE.Scene();scene.background=new THREE.Color('#e8e4da');
@@ -20,18 +22,14 @@ const camera=new THREE.PerspectiveCamera(43,1,.025,200);
 const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.09;
 controls.maxPolarAngle=Math.PI*.49;controls.minDistance=.3;controls.maxDistance=35;
 const pmrem=new THREE.PMREMGenerator(renderer);scene.environment=pmrem.fromScene(new RoomEnvironment(),.04).texture;
-scene.add(new THREE.HemisphereLight(0xfff4dc,0x787166,1.25));
-const sun=new THREE.DirectionalLight(0xffecd1,2.3);sun.position.set(-3,14,-8);sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=12;sun.shadow.camera.bottom=-12;sun.shadow.normalBias=.025;
-scene.add(sun);sun.target.position.set(4.5,0,-5);scene.add(sun.target);
-const fill=new THREE.DirectionalLight(0xc9dcff,1.1);fill.position.set(12,7,4);scene.add(fill);
-const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0xe8e4da,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.205;floor.receiveShadow=true;scene.add(floor);
+const lighting=createLighting(scene,renderer);
+setupViewerUI(lighting);
 
 let walk=null;
 let model=null,move=null,current='overview';let meshCount=0;
 const V=(x,y,z)=>new THREE.Vector3(x,z,-y);
 const views={
- overview:{p:[-5.8,-8.0,12.3],t:[4.7,5.2,.4],fov:43,title:'全屋轴测',note:'剖切墙体，查看客餐厨、双人工位与卧室之间的关系。',cut:true},
+ overview:{p:[-3.7,-5.5,10.4],t:[4.7,5.2,.4],fov:43,title:'全屋轴测',note:'剖切墙体，查看客餐厨、双人工位与卧室之间的关系。',cut:true},
  plan:{p:[4.9,5.1,18.7],t:[4.9,5.1,0],fov:36,title:'俯视布局',note:'上方为南向窗面。可打开 CAD 线稿，核对家具与墙体平面。',cut:true},
  tv:{p:[2.45,5.70,1.40],t:[.56,7.06,1.0],fov:67,title:'客厅 · 65英寸落地电视',note:'65英寸 16:9 屏幕，中心约高 1120 mm；取消电视柜和茶几，改用黑色落地支架与小型回音壁托盘。'},
  living:{p:[1.12,4.55,1.55],t:[3.2,8.15,1.15],fov:76,title:'客厅 · 双人工位',note:'炭黑皮沙发、木质长桌、管状金属与少量砖红点缀。南侧保留低梁。'},
@@ -86,6 +84,7 @@ function updateLayers(){
  cadLines.visible=$('cad').checked;
  usageOverlay.visible=$('usage').checked;
  $('pipe-legend').hidden=!$('pipes').checked;
+ lighting.invalidate();
 }
 const coords=[];for(const l of window.CAD_LINES){for(const p of l){coords.push(p[0]/1000,.038,-p[1]/1000)}}
 const cadGeo=new THREE.BufferGeometry();cadGeo.setAttribute('position',new THREE.Float32BufferAttribute(coords,3));
@@ -140,12 +139,12 @@ async function loadModel(width=700){
    entry={scene:g.scene,bytes:new Uint8Array(buffer),count};modelCache.set(width,entry);
   }
   const first=!model;if(model)scene.remove(model);
-  model=entry.scene;modelBytes=entry.bytes;meshCount=entry.count;scene.add(model);
+  model=entry.scene;modelBytes=entry.bytes;meshCount=entry.count;scene.add(model);lighting.syncModel(model);
   Object.assign(navigation,navOptions[width]);activeWidth=width;
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   $('loading').hidden=true;$('selection').hidden=true;
-  $('status').textContent=`模型已就绪 · v10 · ${width} mm`;
+  $('status').textContent=`模型已就绪 · v11 · ${width} mm`;
   window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
   try{localStorage.setItem('home3d.fridge-width.v1',String(width));}catch{}
  }catch(e){
@@ -165,7 +164,7 @@ document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',(
 for(const id of ['cut','roof','furniture','cad','internals','usage'])$(id).addEventListener('change',updateLayers);
 for(const id of ['pipes','walk-pipes'])$(id).addEventListener('change',()=>{const on=$(id).checked;$('pipes').checked=on;$('walk-pipes').checked=on;updateLayers();});
 $('reset').addEventListener('click',()=>setView(current));
-$('capture').addEventListener('click',()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='全屋_'+(walk?.active?'第一人称漫游':views[current].title)+'.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
+$('capture').addEventListener('click',()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='全屋_'+(walk?.active?'第一人称漫游':views[current].title)+'_'+lighting.state.period+(lighting.state.indoor?'_开灯':'_关灯')+'.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
 $('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=modelBytes;const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_冰箱${activeWidth}mm.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 $('info').addEventListener('click',()=>{walk?.pause();$('details').showModal()});$('close-info').addEventListener('click',()=>$('details').close());
 walk=createWalkthrough({camera,canvas:renderer.domElement,nav:navigation,host,

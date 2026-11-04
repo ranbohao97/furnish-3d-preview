@@ -15,6 +15,6 @@ await build({entryPoints:[path.join(root,'app.js')],outfile:path.join(root,'app.
 const g=JSON.parse(fs.readFileSync(path.join(root,'current-geometry.json'),'utf8'));
 const lines=g.lines.filter(l=>l.p.every(p=>p[0]>-100&&p[0]<10000&&p[1]>-300&&p[1]<10500)).map(l=>l.p);
 const revision=name=>createHash('sha256').update(fs.readFileSync(path.join(root,name))).digest('hex').slice(0,12);
-const html=fs.readFileSync(path.join(root,'template.html'),'utf8').replace('__CAD_DATA__',()=>JSON.stringify(lines)).replace('__MODEL_VARIANTS__',()=>JSON.stringify(modelUrls)).replace('__APP_REV__',revision('app.bundle.js'));
+const html=fs.readFileSync(path.join(root,'template.html'),'utf8').replace('__CAD_DATA__',()=>JSON.stringify(lines)).replace('__MODEL_VARIANTS__',()=>JSON.stringify(modelUrls)).replace('__APP_REV__',revision('app.bundle.js')).replace('__STYLES__',()=>fs.readFileSync(path.join(root,'viewer.css'),'utf8'));
 fs.writeFileSync(path.join(root,'index.html'),html);
 console.log('Built index.html and app.bundle.js; three fridge variants are loaded on demand.');
