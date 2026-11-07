@@ -17,7 +17,7 @@ for(const width of [600,700,800]){
   assert.ok(isWalkable(free,5.90,7.05),'old projecting craft return is removed');
   assert.ok(isWalkable(free,5.60,5.70),'old folded jamb is removed');
   assert.equal(isWalkable(free,6.28,7.05),false,'new craft-side return is sealed');
-  assert.equal(isWalkable(free,6.28,5.70),false,'new south jamb is sealed');
+  assert.equal(isWalkable(free,6.65,5.70),false,'recessed cabinet back wall is sealed');
   assert.ok(isWalkable(free,6.28,6.44),'new 1100 mm master doorway is passable');
   const start=n.starts.living,q=[[Math.floor(start.x/n.step),Math.floor(start.y/n.step)]],seen=new Set(q.map(([x,y])=>`${x},${y}`));
   for(let i=0;i<q.length;i++){const [x,y]=q[i];for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){const a=x+dx,b=y+dy,k=`${a},${b}`;if(!seen.has(k)&&isWalkable(free,(a+.5)*n.step,(b+.5)*n.step)){seen.add(k);q.push([a,b]);}}}

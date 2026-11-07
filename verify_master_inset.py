@@ -37,11 +37,13 @@ def verify(base,variant):
     rows=read_meshes(variant)
     body=[o for o in rows if o['name'].startswith('过道浅柜') and any(k in o['name']for k in ('背板','侧板','横板','竖隔'))]
     dims=(np.max([o['hi']for o in body],axis=0)-np.min([o['lo']for o in body],axis=0))*1000
-    assert np.allclose(dims,[310,600,2300],atol=.1),dims
+    assert np.allclose(dims,[310,480,2300],atol=.1),dims
+    fronts=[float(o['lo'][0])*1000 for o in rows if '拉手' not in o['name'] and o['name'].startswith(('过道浅柜柜门','储物间封闭柜门','主卧玻璃门框'))]
+    assert len(fronts)>=3 and all(abs(x-6260)<.1 for x in fronts),fronts
     walls=unary_union([o['footprint']for o in rows if o['category']in ('WallsLow','WallsUpper') and o['lo'][2]<1.6<o['hi'][2]])
     cabinet=unary_union([o['footprint']for o in rows if o['name'].startswith('过道浅柜')and o['lo'][2]<1.6<o['hi'][2]])
     overlap=cabinet.intersection(walls.buffer(-.0001)).area*1e6;assert overlap<1,overlap
-    return {'unchanged_meshes':unchanged,'translated_door_meshes':moved,'door_offset_mm':670,'old_entry_cabinet_removed':True,'hall_cabinet_body_mm':[round(float(v),1)for v in dims],'cabinet_wall_overlap_mm2':round(overlap,3),'architecture':audit,'passed':True}
+    return {'unchanged_meshes':unchanged,'translated_door_meshes':moved,'door_offset_mm':670,'old_entry_cabinet_removed':True,'hall_cabinet_body_mm':[round(float(v),1)for v in dims],'cabinet_front_x_mm':6260,'cabinet_wall_overlap_mm2':round(overlap,3),'architecture':audit,'passed':True}
 
 
 if __name__=='__main__':

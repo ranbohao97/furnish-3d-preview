@@ -174,7 +174,7 @@ async function loadModel(width=700,layout=activeLayout){
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   $('loading').hidden=true;$('selection').hidden=true;
-  $('status').textContent=`v13 · ${MASTER_LAYOUTS[layout].label} · ${width} mm`;
+  $('status').textContent=`v13.1 · ${MASTER_LAYOUTS[layout].label} · ${width} mm`;
   window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
   try{localStorage.setItem('home3d.fridge-width.v1',String(width));localStorage.setItem('home3d.master-layout.v1',layout);}catch{}
  }catch(e){
