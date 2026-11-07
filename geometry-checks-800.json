@@ -1,7 +1,7 @@
 {
-  "revision": "v12 / CAD 2026-11-07",
+  "revision": "v12.1 / construction details / CAD 2026-11-07",
   "dining_chairs": 4,
-  "mesh_count": 1368,
+  "mesh_count": 1426,
   "entry_carcass_mm": [
     380.0,
     3250.0,
@@ -82,7 +82,11 @@
   "study_monitors": 1,
   "robot_room": "kitchen",
   "service_meshes": 17,
-  "front_panels": 72,
+  "front_panels": 73,
+  "wardrobe_end_panels": 4,
+  "washer_back_clearance_mm": 10.0,
+  "plinth_end_returns": 22,
+  "construction_details": 63,
   "floor_meshes": 3,
   "wall_opening_point_checks": "passed"
 }

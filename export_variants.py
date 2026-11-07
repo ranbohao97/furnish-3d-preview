@@ -7,6 +7,7 @@ ROOT=Path(__file__).resolve().parent;sys.path.insert(0,str(ROOT))
 from kitchen_config import layout,build_zone
 from model_export import batch_finishes
 from revised_interior import finish_revision, finish_layout
+from construction_details import finish_construction
 args=sys.argv[sys.argv.index('--')+1:];base=Path(args[0]);out=Path(args[1])
 source=ast.parse((ROOT/'build_model.py').read_text())
 helpers=[n for n in source.body if isinstance(n,ast.FunctionDef) and n.name in ('group','tag','finish','box','rect','cyl','tube','cabinet','chair')]
@@ -20,8 +21,8 @@ for width in (700,600,800):
  exec(compile(ast.Module(body=helpers,type_ignores=[]),'build_model_helpers','exec'),globals())
  for o in list(bpy.data.objects):
   if o.name.startswith(('扫地机','窗侧钢台面','冰箱旁窄高柜','法式冰箱')):bpy.data.objects.remove(o,do_unlink=True)
- build_zone(globals(),layout(width));finish_revision(globals());finish_layout(globals());batch_finishes(bpy)
- scene['Project']='新版CAD与设计师白模重建 v12';scene['Fridge_width_mm']=width
+ build_zone(globals(),layout(width));finish_revision(globals());finish_layout(globals());finish_construction(globals());batch_finishes(bpy)
+ scene['Project']='新版CAD与设计师白模重建 v12.1 / 柜体构造完善';scene['Fridge_width_mm']=width
  for cat in ('WallsUpper','Ceiling','Windows','Curtains','BathroomWalls'):COL[cat].hide_render=True
  for key in ('09 三角洗手台','09 方形洗手台'):
   if key in bpy.data.objects:

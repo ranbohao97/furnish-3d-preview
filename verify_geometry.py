@@ -18,7 +18,7 @@ checks={}
 def size(name):
  lo,hi=bound(name);return [round(float(v)*1000,1) for v in hi-lo]
 def near(actual,expected,tol=.5):assert abs(actual-expected)<=tol,(actual,expected)
-checks['revision']='v12 / CAD 2026-11-07'
+checks['revision']='v12.1 / construction details / CAD 2026-11-07'
 assert size('新版上侧独立书桌')==[700.0,1400.0,40.0]
 assert size('新版下侧独立书桌')==[700.0,1400.0,40.0]
 lo,hi=bound('圆餐桌桌面');assert abs((lo[0]+hi[0])/2-2.09)<.001 and abs((lo[1]+hi[1])/2-3.42)<.001
@@ -66,6 +66,37 @@ assert bound('工位显示器')[0][1]>7.5 and bound('笔记本底座')[1][1]<7.0
 checks['robot_room']=[v['extras']['room']for v in rows if v['name']=='扫地机自动上下水基站'][0];assert checks['robot_room']=='kitchen'
 checks['service_meshes']=sum(v['extras'].get('category')=='Services'for v in rows);assert checks['service_meshes']>=16
 checks['front_panels']=sum(bool(v['extras'].get('front_panel'))for v in rows)
+checks['wardrobe_end_panels']=sum('端侧板' in v['name']for v in rows)
+assert checks['wardrobe_end_panels']==4
+assert not any('侧移门' in v['name']for v in rows)
+for prefix,axis,edges,depth_axis,depth in [
+ ('主卧床尾衣柜',1,[6.99,9.282],0,[6.525,7.05]),
+ ('主卧长衣金属衣柜',0,[6.38,7.892],1,[5.335,5.89])]:
+ panels=sorted([v for v in rows if v['name'].startswith(prefix+'端侧板')],key=lambda v:v['min'][axis])
+ for v,edge in zip(panels,edges):
+  near(v['min'][axis],edge,.0001);near(v['max'][axis]-v['min'][axis],.018,.0001)
+  near(v['min'][2],.08,.0001);near(v['max'][2],2.43,.0001)
+  near(v['min'][depth_axis],depth[0],.0001);near(v['max'][depth_axis],depth[1],.0001)
+  assert not v['extras'].get('front_panel'), 'End panels must remain visible in interior mode'
+washer=next(v for v in rows if v['name']=='洗衣机')
+checks['washer_back_clearance_mm']=round((bound('洗烘柜背板')[0][0]-washer['max'][0])*1000,1)
+assert checks['washer_back_clearance_mm']>=9.9
+for machine,z in [('洗衣机',.02),('烘干机',.89)]:
+ row=next(v for v in rows if v['name']==machine)
+ near(row['min'][2],z,.0001)
+ if machine=='烘干机':near(row['min'][2],bound('洗烘叠放连接托架')[1][2],.0001)
+assert bound('洗烘设备分隔立板')[1][1]<=washer['min'][1]+.001
+assert bound('洗烘设备右立板')[0][1]>=washer['max'][1]-.001
+near(bound('洗衣机上层板')[1][0],bound('洗烘柜背板')[0][0],.0001)
+checks['plinth_end_returns']=sum('踢脚端回板' in v['name']for v in rows)
+assert checks['plinth_end_returns']>=20
+near(bound('餐边备用杯')[0][2],.558,.0001)
+assert bound('几何画木框')[0][2]>bound('餐边开放层板')[1][2]
+for v in rows:
+ if v['name'].startswith('储物间收纳箱'):
+  assert min(abs(v['min'][2]-z) for z in [.62,1.12,1.62])<.0001
+assert not any(v['name']=='厨房转角封板'for v in rows)
+checks['construction_details']=sum(bool(v['extras'].get('construction_detail'))for v in rows)
 checks['floor_meshes']=sum(v['extras'].get('category')=='Floor'for v in rows);assert checks['floor_meshes']<12
 # Independent point checks against unioned walls: old portals were removed and new ones remain open.
 from shapely.geometry import Polygon, Point
