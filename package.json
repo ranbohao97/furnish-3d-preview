@@ -1,11 +1,11 @@
 {
   "name": "furnish-3d-preview",
-  "version": "13.3.0",
+  "version": "13.4.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node --test navigation.test.js kitchen-options.test.js walkthrough.test.js"
+    "test": "node --test navigation.test.js kitchen-options.test.js walkthrough.test.js tv-options.test.js"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

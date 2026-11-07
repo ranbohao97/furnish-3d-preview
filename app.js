@@ -1,6 +1,7 @@
 import * as THREE from './three.module.min.js';
 import {OrbitControls} from './OrbitControls.js';
 import {GLTFLoader} from './GLTFLoader.js';
+import {applyTVSize,tvSpec,tvNavigation,tvGLB} from './tv-options.js';
 import {createWalkthrough} from './walkthrough.js';
 import nav700 from './navigation.json';
 import nav600 from './navigation-600.json';
@@ -121,6 +122,7 @@ renderer.domElement.addEventListener('pointerup',e=>{
  $('selection').textContent=n.name.replace(/_\d+$/,'');$('selection').hidden=false;}
 });
 let modelLoading=false;
+let activeTV=65;try{activeTV=tvSpec(localStorage.getItem('home3d.tv-size.v1')).inches;}catch{}
 let modelBytes,activeWidth=700,retryWidth=700,activeLayout='current',retryLayout='current';
 const modelCache=new Map();
 function layoutDisabled(disabled){
@@ -148,15 +150,34 @@ function describeKitchen(width){
  views.fridge.note=`富士白冰箱：${width===600?'上单门':'上双门'}、下双抽屉。冰箱宽 ${width} mm；左侧高柜固定 ${k.pantry_width_mm} mm，窗侧柜 ${k.robot_width_mm} mm，进出洞口保持 430 mm。`;
  if(current==='fridge')$('view-note').textContent=views.fridge.note;
 }
+function describeTV(){
+ const spec=tvSpec(activeTV);
+ for(const id of ['tv-size','walk-tv'])$(id).value=String(activeTV);
+ const text=`${activeTV} 英寸 · 屏幕 ${Math.round(spec.width*1000)} × ${Math.round(spec.height*1000)} mm · 中心高 1120 mm`;
+ $('tv-status').textContent=text;$('walk-tv-note').textContent=text;
+ views.tv.title=`客厅 · ${activeTV}英寸落地电视`;
+ views.tv.note=text+'；电视中心及支架主体固定，回音壁托盘随大屏下调以留出间隙。';
+ views.living.note=`按新版 CAD 与白模重建；${activeTV} 寸落地电视、无茶几，双工位背后为实体装饰隔断。`;
+ if(!walk?.active&&['tv','living'].includes(current)){$('view-title').textContent=views[current].title;$('view-note').textContent=views[current].note;}
+ if(model)$('status').textContent=`v13.4 · ${MASTER_LAYOUTS[activeLayout].label} · 冰箱 ${activeWidth} mm · 电视 ${activeTV}″`;
+}
+function changeTV(value){
+ if(modelLoading||!model)return;
+ activeTV=tvSpec(value).inches;applyTVSize(model,activeTV);
+ Object.assign(navigation,tvNavigation(navOptions[activeLayout][activeWidth],activeTV));
+ const relocated=walk?.revalidatePosition();describeTV();
+ $('walk-config-status').textContent=relocated?'电视尺寸已更新，已移至附近可通行位置，朝向保持。':'电视尺寸已更新，当前位置与朝向保持。';
+ try{localStorage.setItem('home3d.tv-size.v1',String(activeTV));}catch{}
+}
 function syncWalkConfig(){
- $('walk-layout').value=activeLayout;$('walk-fridge').value=String(activeWidth);
+ $('walk-layout').value=activeLayout;$('walk-fridge').value=String(activeWidth);$('walk-tv').value=String(activeTV);
 }
 function walkConfigBusy(busy){
- for(const id of ['walk-layout','walk-fridge','walk-config-close','walk-config-retry'])$(id).disabled=busy;
+ for(const id of ['walk-layout','walk-fridge','walk-tv','walk-config-close','walk-config-retry'])$(id).disabled=busy;
 }
 async function loadModel(width=700,layout=activeLayout){
  if(modelLoading)return;
- modelLoading=true;walk?.setBusy(true);walkConfigBusy(true);
+ modelLoading=true;$('tv-size').disabled=true;walk?.setBusy(true);walkConfigBusy(true);
  $('walk-config-retry').hidden=true;
  $('walk-config-status').textContent='正在切换配置，请稍候…';
  const choice=modelChoice(width,layout);width=choice.width;layout=choice.layout;
@@ -178,17 +199,18 @@ async function loadModel(width=700,layout=activeLayout){
    }});
    entry={scene:g.scene,bytes:new Uint8Array(buffer),count};
   }
+  applyTVSize(entry.scene,activeTV);
   const first=!model;if(model)scene.remove(model);
   model=entry.scene;modelBytes=entry.bytes;meshCount=entry.count;scene.add(model);
   modelCache.delete(choice.key);modelCache.set(choice.key,entry);trimModelCache();
-  Object.assign(navigation,navOptions[layout][width]);activeWidth=width;activeLayout=layout;describeLayout();
+  Object.assign(navigation,tvNavigation(navOptions[layout][width],activeTV));activeWidth=width;activeLayout=layout;describeLayout();
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   const relocated=walk?.revalidatePosition();
   syncWalkConfig();
   $('walk-config-status').textContent=relocated?'配置已更新；原位置被新墙体或家具占用，已移至附近可通行位置。朝向保持。':'配置已更新，当前位置与朝向保持。';
   $('loading').hidden=true;$('selection').hidden=true;
-  $('status').textContent=`v13.3 · ${MASTER_LAYOUTS[layout].label} · ${width} mm`;
+  describeTV();
   window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
   try{localStorage.setItem('home3d.fridge-width.v1',String(width));localStorage.setItem('home3d.master-layout.v1',layout);}catch{}
  }catch(e){
@@ -199,12 +221,15 @@ async function loadModel(width=700,layout=activeLayout){
   if(model)$('loading').hidden=true;
   else{$('loading').classList.add('failed');$('loading-text').textContent='模型加载失败，请在冰箱配置中点击重试。';}
  }finally{
-  modelLoading=false;walk?.setBusy(false);walkConfigBusy(false);
+  modelLoading=false;$('tv-size').disabled=!model;walk?.setBusy(false);walkConfigBusy(false);
   $('fridge-width').disabled=false;$('walk-start').disabled=!model;$('download').disabled=!model;
   layoutDisabled(false);
  }
 }
 let savedWidth=700,savedLayout='current';try{const stored=Number(localStorage.getItem('home3d.fridge-width.v1'));if(kitchenOptions[stored])savedWidth=stored;const layout=localStorage.getItem('home3d.master-layout.v1');if(Object.hasOwn(MASTER_LAYOUTS,layout))savedLayout=layout;}catch{}
+describeTV();
+$('tv-size').addEventListener('change',e=>changeTV(e.target.value));
+$('walk-tv').addEventListener('change',e=>changeTV(e.target.value));
 $('fridge-width').value=String(savedWidth);loadModel(savedWidth,savedLayout);
 $('fridge-width').addEventListener('change',e=>loadModel(e.target.value));
 $('master-layout').addEventListener('change',e=>loadModel(activeWidth,e.target.value));
@@ -230,7 +255,7 @@ for(const id of ['cut','roof','furniture','cad','internals','usage'])$(id).addEv
 for(const id of ['pipes','walk-pipes'])$(id).addEventListener('change',()=>{const on=$(id).checked;$('pipes').checked=on;$('walk-pipes').checked=on;updateLayers();});
 $('reset').addEventListener('click',()=>setView(current));
 $('capture').addEventListener('click',()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='全屋_'+(walk?.active?'第一人称漫游':views[current].title)+'.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
-$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=modelBytes;const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_${activeLayout==='inset'?'主卧门内移':'当前方案'}_冰箱${activeWidth}mm.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=tvGLB(modelBytes,activeTV);const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_${activeLayout==='inset'?'主卧门内移':'当前方案'}_冰箱${activeWidth}mm_电视${activeTV}寸.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 $('info').addEventListener('click',()=>{walk?.pause();$('details').showModal()});$('close-info').addEventListener('click',()=>$('details').close());
 walk=createWalkthrough({camera,canvas:renderer.domElement,nav:navigation,host,
  onEnter(){
