@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from audit_architecture import check,read_meshes
 from shapely.ops import unary_union
+from shapely.geometry import box
 
 
 def meshes(path):
@@ -23,7 +24,7 @@ def meshes(path):
 def verify(base,variant):
     a,b=meshes(base),meshes(variant);unchanged=0;moved=0
     assert not any(n.startswith('主卧入口浅柜')for n in b)
-    assert any(n.startswith('过道浅柜柜门')for n in b)
+    assert not any(n.startswith('过道浅柜')for n in b)
     for name,old in a.items():
         if old['category']in ('WallsLow','WallsUpper') or name.startswith('主卧入口浅柜') or name=='主卧入口吊顶':continue
         new=b[name]
@@ -35,15 +36,14 @@ def verify(base,variant):
         else:assert np.allclose(delta,[0,0,0],atol=.00001),name;unchanged+=1
     audit=check(variant,'inset');assert audit['passed']
     rows=read_meshes(variant)
-    body=[o for o in rows if o['name'].startswith('过道浅柜') and any(k in o['name']for k in ('背板','侧板','横板','竖隔'))]
-    dims=(np.max([o['hi']for o in body],axis=0)-np.min([o['lo']for o in body],axis=0))*1000
-    assert np.allclose(dims,[310,480,2300],atol=.1),dims
-    fronts=[float(o['lo'][0])*1000 for o in rows if '拉手' not in o['name'] and o['name'].startswith(('过道浅柜柜门','储物间封闭柜门','主卧玻璃门框'))]
-    assert len(fronts)>=3 and all(abs(x-6260)<.1 for x in fronts),fronts
-    walls=unary_union([o['footprint']for o in rows if o['category']in ('WallsLow','WallsUpper') and o['lo'][2]<1.6<o['hi'][2]])
-    cabinet=unary_union([o['footprint']for o in rows if o['name'].startswith('过道浅柜')and o['lo'][2]<1.6<o['hi'][2]])
-    overlap=cabinet.intersection(walls.buffer(-.0001)).area*1e6;assert overlap<1,overlap
-    return {'unchanged_meshes':unchanged,'translated_door_meshes':moved,'door_offset_mm':670,'old_entry_cabinet_removed':True,'hall_cabinet_body_mm':[round(float(v),1)for v in dims],'cabinet_front_x_mm':6260,'cabinet_wall_overlap_mm2':round(overlap,3),'architecture':audit,'passed':True}
+    # The plain frontage must span the full former cabinet bay at every height.
+    for z in (.05,.50,1.60,2.39,2.60):
+        walls=unary_union([o['footprint']for o in rows if o['category']in ('WallsLow','WallsUpper') and o['lo'][2]<z<o['hi'][2]])
+        section=walls.intersection(box(6.0,5.30,6.50,5.76))
+        assert np.allclose(section.bounds,[6.26,5.30,6.38,5.76],atol=.0001),section.bounds
+        assert box(6.261,5.291,6.379,5.889).difference(walls.buffer(.0001)).area<1e-6
+    return {'unchanged_meshes':unchanged,'translated_door_meshes':moved,'door_offset_mm':670,'old_entry_cabinet_removed':True,'hall_cabinet_removed':True,'plain_wall_front_x_mm':6260,'plain_wall_thickness_mm':120,'architecture':audit,'passed':True}
+
 
 
 if __name__=='__main__':

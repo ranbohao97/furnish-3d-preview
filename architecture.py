@@ -10,7 +10,7 @@ def wall_records(root, master_layout='current'):
         for w in solids:
             if w['name']=='主卧门上过梁':w['p']=[[x+.67,y]for x,y in w['p']]
             elif w['name']=='主卧门手工侧封墙':w['p']=[[6.21,6.99],[6.50,6.99],[6.50,7.11],[6.21,7.11]]
-            elif w['name']=='主卧入口折墙':w['p']=[[7.93,5.17],[7.93,5.29],[6.708,5.29],[6.708,5.89],[6.26,5.89],[6.26,5.77],[6.588,5.77],[6.588,5.29],[6.26,5.29],[6.26,5.17]]
+            elif w['name']=='主卧入口折墙':w['p']=[[7.93,5.17],[7.93,5.29],[6.38,5.29],[6.38,5.89],[6.26,5.89],[6.26,5.17]]
     elif master_layout!='current':raise ValueError(master_layout)
     for i,h in enumerate(geom['hatches']):
         if h['pattern']!='SOLID':continue

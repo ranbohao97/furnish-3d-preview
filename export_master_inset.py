@@ -16,7 +16,7 @@ for width in (700,600,800):
     COL={c.name:c for c in bpy.data.collections};M={k:bpy.data.materials[v]for k,v in material_map.items() if v in bpy.data.materials};scene=bpy.context.scene
     exec(compile(ast.Module(body=helpers,type_ignores=[]),'build_model_helpers','exec'),globals())
     apply_master_inset(globals())
-    scene['Project']='全屋 v13.1 / 主卧门内移至储藏室门齐平'
+    scene['Project']='全屋 v13.2 / 主卧门内移至储藏室门齐平'
     for cat in ('WallsUpper','Ceiling','Windows','Curtains','BathroomWalls'):COL[cat].hide_render=True
     dest=out/'inset'/f'{width}mm';dest.mkdir(parents=True,exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(dest/'全屋模型.blend'))
