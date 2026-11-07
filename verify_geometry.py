@@ -18,12 +18,7 @@ checks={}
 def size(name):
  lo,hi=bound(name);return [round(float(v)*1000,1) for v in hi-lo]
 def near(actual,expected,tol=.5):assert abs(actual-expected)<=tol,(actual,expected)
-checks['revision']='v12.2 / master doorway return / CAD 2026-11-07'
-checks['master_door_return_mm']=size('主卧门手工侧封墙')
-assert checks['master_door_return_mm']==[720.0,120.0,2720.0]
-lo,hi=bound('主卧门手工侧封墙')
-assert np.allclose(lo,[5.54,6.99,0]) and np.allclose(hi,[6.26,7.11,2.72])
-assert {v['extras'].get('category')for v in rows if v['name'].startswith('主卧门手工侧封墙')}=={'WallsLow','WallsUpper'}
+checks['revision']='v12.3 / whole-home wall and opening audit'
 assert size('新版上侧独立书桌')==[700.0,1400.0,40.0]
 assert size('新版下侧独立书桌')==[700.0,1400.0,40.0]
 lo,hi=bound('圆餐桌桌面');assert abs((lo[0]+hi[0])/2-2.09)<.001 and abs((lo[1]+hi[1])/2-3.42)<.001
@@ -48,7 +43,7 @@ assert checks['guest_bed_mm']==[2000.0,1200.0]
 checks['guest_door_hinge_y_mm']=4360
 checks['store_door_envelope_mm']=size('储物间柜门框')
 assert checks['store_door_envelope_mm']==[60.0,750.0,2400.0]
-checks['store_cad_clear_outline_mm']=[[6300,4420],[6500,4420],[6500,4170],[7480,4170],[7480,4420],[7910,4420],[7910,5170],[6300,5170]]
+checks['store_cad_clear_outline_mm']=[[6300,4420],[6500,4420],[6500,4170],[7480,4170],[7480,4420],[7930,4420],[7930,5170],[6300,5170]]
 checks['store_closed_door_panels']=sum(v['name'].startswith('储物间封闭柜门')for v in rows)
 assert checks['store_closed_door_panels']==2
 checks['master_wardrobe_carcass_depth_mm']=size('主卧床尾衣柜底板')[0]

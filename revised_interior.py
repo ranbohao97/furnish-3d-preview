@@ -4,27 +4,6 @@ The owner's no-coffee-table / floor-TV / no-kitchen-upper-cabinet decisions prev
 """
 import math
 
-def finish_door_enclosure(api):
-    """CAD COMM-WALL return closes the craft-side end of the master doorway.
-
-    Keep both halves architectural, so wall cutaways and collision use the same
-    boundary. Re-run safely when exporting variants from an existing scene.
-    """
-    import json
-    bpy=api['bpy'];name='主卧门手工侧封墙'
-    for o in list(bpy.data.objects):
-        if o.name.startswith(name):bpy.data.objects.remove(o,do_unlink=True)
-    records=[]
-    for z0,z1,cat in [(0,1.10,'WallsLow'),(1.10,2.72,'WallsUpper')]:
-        o=api['rect'](name,5.54,6.26,6.99,7.11,z0,z1,'wall',cat,'master',0)
-        o['source']='Revised CAD COMM-WALL: x5540..6260, y6990..7110 mm; height assumed 2720 mm'
-        records.append(dict(name=name,p=[[5.54,6.99],[6.26,6.99],[6.26,7.11],[5.54,7.11]],z1=z0,z2=z1))
-    # Keep the construction QA footprint in sync with the real exported wall.
-    path=api['ROOT']/'wall-footprints.json'
-    walls=json.loads(path.read_text())
-    walls=[w for w in walls if w['name']!=name]+records
-    path.write_text(json.dumps(walls,ensure_ascii=False))
-
 def build_entry(api):
     rect,box,tube,cyl,cabinet=[api[n] for n in ('rect','box','tube','cyl','cabinet')]
     H=api['H'];white='kitchen_white'

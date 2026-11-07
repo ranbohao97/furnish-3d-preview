@@ -9,8 +9,9 @@ OUTPUT=Path(os.environ.get('MODEL_OUTPUT_DIR',ROOT/'generated'));OUTPUT.mkdir(pa
 sys.path.insert(0,str(ROOT))
 from kitchen_config import layout,build_zone
 from balcony_window import build_balcony_window
-from revised_interior import build_entry, build_detail, finish_revision, finish_layout, finish_door_enclosure
+from revised_interior import build_entry, build_detail, finish_revision, finish_layout
 from construction_details import finish_construction
+from architecture import wall_records, finish_door_frames
 KITCHEN=layout(int(os.environ.get('FRIDGE_WIDTH_MM','700')))
 D=json.loads((ROOT/'model-data.json').read_text())
 random.seed(603)
@@ -147,69 +148,8 @@ prism('完整户型基座',D['footprint'],-.20,-.035,'floorbase','Base')
 prism('地面基层',D['footprint'],-.035,0,'grout','Floor')
 for i,p in enumerate(D['wood_planks']):
     prism('木地板_%04d'%i,p['p'],0,.014,'oak','Floor')
-# Structural solids are taken directly from DWG hatches, excluding the entry arrow.
-geom=json.loads((ROOT/'current-geometry.json').read_text())
-for i,h in enumerate(geom['hatches']):
-    if h['pattern']!='SOLID':continue
-    for j,pts in enumerate(h['paths']):
-        if len(pts)<3:continue
-        wallpoly('原图实心墙_%s_%s'%(i,j),[(x/1000,y/1000)for x,y in pts])
-# Continuous envelope with real openings.
-wall('西外墙',.07,.31,.91,8.7)
-wall('南阳台左立柱',.76,1.00,8.41,8.70)
-wall('南阳台左墙上段',.76,1.00,9.34,10.23)
-wall('左侧高窗窗台',.76,1.00,8.70,9.34,1.23)
-wall('左侧高窗窗楣',.76,1.00,8.70,9.34,H,2.50)
-wall('南窗左边框',.76,1.00,9.99,10.23)
-wall('南窗中柱',5.56,5.75,9.99,10.23)
-wall('洗烘侧墙',6.21,6.33,9.49,10.23)
-wall('主卧飘窗左柱',6.96,7.20,9.49,10.23)
-wall('东外墙',9.56,9.80,2.87,10.23)
-wall('主卧南梁',7.20,9.56,9.30,9.49,H,2.28)
-wall('主卧飘窗下墙',7.20,9.56,9.99,10.23,.52)
-wall('主卧飘窗窗楣',7.20,9.56,9.99,10.23,H,2.50)
-wall('阳台低梁',.76,6.26,8.41,8.70,H,1.96)
-wall('主卧衣柜背墙',6.26,6.50,6.99,9.30)
-wall('主卧门上过梁',5.54,5.68,5.89,6.99,H,2.20)
-wall('主卧长衣柜背墙',6.38,7.93,5.17,5.29)
-wall('主卧浅柜背墙',5.54,6.38,5.42,5.54)
-wall('主卧浅柜左墙',5.54,5.66,5.42,5.89)
-wall('主卧柜体错位返回墙',6.26,6.38,5.17,5.54)
-wall('主卫门左墙',8.06,8.10,5.77,5.89)
-wall('主卫门右墙',8.90,9.56,5.77,5.89)
-wall('主卫门过梁',8.10,8.90,5.77,5.89,H,2.16)
-wall('主卫西墙',7.91,8.06,4.20,5.77)
-wall('主卫南侧窗台',8.06,8.71,2.87,3.11,.87)
-wall('主卫南侧墙',8.71,9.56,2.87,3.11)
-wall('主卫南侧窗楣',8.06,8.71,2.87,3.11,H,2.29)
-wall('次卧西墙',5.22,5.34,1.83,4.42)
-wall('次卧门左墙',5.34,5.41,4.30,4.42)
-wall('次卧门右墙',6.24,6.38,4.30,4.42)
-wall('次卧门楣',5.41,6.24,4.30,4.42,H,2.20)
-wall('储物间下隔墙',6.50,7.82,4.05,4.17)
-wall('储物间左墙脚',6.38,6.50,4.05,4.42)
-wall('次卧窗左墙',5.22,5.85,1.59,1.83)
-wall('次卧窗台',5.85,7.28,1.59,1.83,.84)
-wall('次卧窗楣',5.85,7.28,1.59,1.83,H,2.27)
-wall('次卫西墙',3.47,3.71,2.70,4.42)
-wall('洗手台背墙',3.71,4.37,3.80,3.92)
-wall('洗手台右隔墙',4.31,4.37,3.92,4.42)
-wall('次卫门左墙',4.37,4.41,4.28,4.42)
-wall('次卫门右墙',5.18,5.22,4.28,4.42)
-wall('次卫门楣',4.41,5.18,4.28,4.42,H,2.16)
-wall('次卫南窗左墙',4.21,4.41,1.59,1.83)
-wall('次卫南窗台',4.41,5.04,1.59,1.83,.87)
-wall('次卫南窗右墙',5.04,5.22,1.59,1.83)
-wall('次卫南窗楣',4.41,5.04,1.59,1.83,H,2.30)
-wall('厨房东下墙',3.97,4.21,.24,.67)
-wall('厨房窗台',3.97,4.21,.67,1.50,.81)
-wall('厨房窗楣',3.97,4.21,.67,1.50,H,2.23)
-wall('厨房东上墙',3.97,4.21,1.50,2.46)
-wall('入口左门墩',.07,.71,.91,1.15)
-wall('入口右门墩',1.79,2.10,.91,1.15)
-wall('入口门楣',.71,1.79,.91,1.15,H,2.06)
-wall('厨房北墙',1.87,4.21,0,.24)
-wall('厨房左返回墙',1.87,2.10,.24,.91)
+# Canonical CAD-audited shell, shared with variant exports.
+WALLS=wall_records(ROOT)
 merge_walls()
 # Ceiling is separately selectable in the viewer.
 prism('全屋顶面',D['footprint'],H,H+.04,'ceiling','Ceiling')
@@ -678,7 +618,7 @@ for z in (2.47,2.50,2.53):rect('风口细格栅',.677,.685,6.22,7.93,z,z+.006,'s
 build_detail(globals())
 finish_revision(globals())
 finish_layout(globals())
-finish_door_enclosure(globals())
+finish_door_frames(globals())
 finish_construction(globals())
 
 # Lighting and named cameras. Full model is exported before display hiding.
@@ -725,7 +665,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='新版CAD与设计师白模重建 v12'
+scene['Project']='新版CAD与设计师白模重建 v12.3 / 墙体门洞核查'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'

@@ -1,12 +1,7 @@
 {
-  "revision": "v12.2 / master doorway return / CAD 2026-11-07",
-  "master_door_return_mm": [
-    720.0,
-    120.0,
-    2720.0
-  ],
+  "revision": "v12.3 / whole-home wall and opening audit",
   "dining_chairs": 4,
-  "mesh_count": 1428,
+  "mesh_count": 1440,
   "entry_carcass_mm": [
     380.0,
     3250.0,
@@ -57,11 +52,11 @@
       4420
     ],
     [
-      7910,
+      7930,
       4420
     ],
     [
-      7910,
+      7930,
       5170
     ],
     [

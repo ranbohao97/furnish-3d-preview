@@ -42,5 +42,4 @@ def build_balcony_window(api):
         tube('阳台'+label+'外开扇把手',[p(span-f/2,-.05,1.45),p(span-f/2,-.05,1.61)],.009,'black','Windows','balcony')
         for z in (bottom+.18,top-.18):
             box('阳台'+label+'外开铰链',(hinge,y,z),(.025,.08,.10),'window_frame','Windows','balcony',.003)
-    # Close the remaining head space to the existing ceiling, without changing the opening width.
-    rect('阳台窗顶收口',x0,x1,9.99,10.23,z1,2.72,'wall','WallsUpper','balcony',.002)
+    # Sill and head closure are owned by the shared architecture manifest.

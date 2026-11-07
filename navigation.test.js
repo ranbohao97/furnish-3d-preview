@@ -12,6 +12,12 @@ for(const width of [600,700,800])test(`${width} mm: craft-side master return is 
  assert.ok(moveOnGrid(free,{x:5.90,y:6.60},0,1).y<6.85,'cannot walk from bedroom through missing return');
  assert.ok(moveOnGrid(free,{x:5.90,y:7.50},0,-1).y>7.30,'cannot walk from craft desk through wall');
 });
+for(const width of [600,700,800])test(`${width} mm: repaired walls are structural and every scheduled doorway remains reachable`,()=>{
+ const file=width===700?'./navigation.json':`./navigation-${width}.json`;
+ const free=navigationMode(JSON.parse(fs.readFileSync(new URL(file,import.meta.url))),true);
+ for(const [x,y]of [[7.60,4.185],[7.995,5.83],[4.10,2.745]])assert.equal(isWalkable(free,x,y),false,`sealed wall ${x},${y}`);
+ for(const [x,y]of [[1.24,1.20],[4.795,4.35],[5.825,4.36],[5.61,6.44],[8.50,5.83],[6.28,4.795]])assert.equal(isWalkable(free,x,y),true,`portal ${x},${y}`);
+});
 test('navigation belongs to this exact exported model and room starts are clear',()=>{
  assert.equal(nav.model_sha256,createHash('sha256').update(fs.readFileSync(new URL('./home-model.glb',import.meta.url))).digest('hex'));
  for(const p of Object.values(nav.starts))assert.ok(isWalkable(nav,p.x,p.y));
