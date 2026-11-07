@@ -9,7 +9,7 @@ OUTPUT=Path(os.environ.get('MODEL_OUTPUT_DIR',ROOT/'generated'));OUTPUT.mkdir(pa
 sys.path.insert(0,str(ROOT))
 from kitchen_config import layout,build_zone
 from balcony_window import build_balcony_window
-from revised_interior import build_entry, build_detail, finish_revision, finish_layout
+from revised_interior import build_entry, build_detail, finish_revision, finish_layout, finish_door_enclosure
 from construction_details import finish_construction
 KITCHEN=layout(int(os.environ.get('FRIDGE_WIDTH_MM','700')))
 D=json.loads((ROOT/'model-data.json').read_text())
@@ -678,6 +678,7 @@ for z in (2.47,2.50,2.53):rect('风口细格栅',.677,.685,6.22,7.93,z,z+.006,'s
 build_detail(globals())
 finish_revision(globals())
 finish_layout(globals())
+finish_door_enclosure(globals())
 finish_construction(globals())
 
 # Lighting and named cameras. Full model is exported before display hiding.

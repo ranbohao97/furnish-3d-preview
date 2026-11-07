@@ -18,7 +18,12 @@ checks={}
 def size(name):
  lo,hi=bound(name);return [round(float(v)*1000,1) for v in hi-lo]
 def near(actual,expected,tol=.5):assert abs(actual-expected)<=tol,(actual,expected)
-checks['revision']='v12.1 / construction details / CAD 2026-11-07'
+checks['revision']='v12.2 / master doorway return / CAD 2026-11-07'
+checks['master_door_return_mm']=size('主卧门手工侧封墙')
+assert checks['master_door_return_mm']==[720.0,120.0,2720.0]
+lo,hi=bound('主卧门手工侧封墙')
+assert np.allclose(lo,[5.54,6.99,0]) and np.allclose(hi,[6.26,7.11,2.72])
+assert {v['extras'].get('category')for v in rows if v['name'].startswith('主卧门手工侧封墙')}=={'WallsLow','WallsUpper'}
 assert size('新版上侧独立书桌')==[700.0,1400.0,40.0]
 assert size('新版下侧独立书桌')==[700.0,1400.0,40.0]
 lo,hi=bound('圆餐桌桌面');assert abs((lo[0]+hi[0])/2-2.09)<.001 and abs((lo[1]+hi[1])/2-3.42)<.001
@@ -103,7 +108,7 @@ from shapely.geometry import Polygon, Point
 walls=json.loads((r/'wall-footprints.json').read_text())
 def blocked(x,y):return any(w['z1']<1.6<w['z2'] and Polygon(w['p']).covers(Point(x,y))for w in walls)
 for pt in [(4.8,4.35),(5.8,4.36),(6.28,4.80),(5.61,6.40)]:assert not blocked(*pt),('doorway blocked',pt)
-for pt in [(4.0,3.86),(6.7,4.11),(6.7,5.23),(5.6,5.70)]:assert blocked(*pt),('wall missing',pt)
+for pt in [(4.0,3.86),(6.7,4.11),(6.7,5.23),(5.6,5.70),(5.9,7.05)]:assert blocked(*pt),('wall missing',pt)
 checks['wall_opening_point_checks']='passed'
 (r/args.output).write_text(json.dumps(checks,ensure_ascii=False,indent=2))
 print(json.dumps(checks,ensure_ascii=False,indent=2))

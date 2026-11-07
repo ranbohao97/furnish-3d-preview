@@ -1,7 +1,12 @@
 {
-  "revision": "v12.1 / construction details / CAD 2026-11-07",
+  "revision": "v12.2 / master doorway return / CAD 2026-11-07",
+  "master_door_return_mm": [
+    720.0,
+    120.0,
+    2720.0
+  ],
   "dining_chairs": 4,
-  "mesh_count": 1424,
+  "mesh_count": 1426,
   "entry_carcass_mm": [
     380.0,
     3250.0,

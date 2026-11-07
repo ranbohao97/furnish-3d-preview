@@ -4,6 +4,14 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {isWalkable,moveOnGrid,movementVector,navigationMode} from './navigation.js';
 const nav=JSON.parse(fs.readFileSync(new URL('./navigation.json',import.meta.url)));
+for(const width of [600,700,800])test(`${width} mm: craft-side master return is closed while the doorway remains passable`,()=>{
+ const file=width===700?'./navigation.json':`./navigation-${width}.json`;
+ const n=JSON.parse(fs.readFileSync(new URL(file,import.meta.url))),free=navigationMode(n,true);
+ assert.equal(isWalkable(free,5.90,7.05),false,'return wall remains solid in furniture pass-through');
+ assert.equal(isWalkable(free,5.61,6.50),true,'actual double-door opening remains reachable');
+ assert.ok(moveOnGrid(free,{x:5.90,y:6.60},0,1).y<6.85,'cannot walk from bedroom through missing return');
+ assert.ok(moveOnGrid(free,{x:5.90,y:7.50},0,-1).y>7.30,'cannot walk from craft desk through wall');
+});
 test('navigation belongs to this exact exported model and room starts are clear',()=>{
  assert.equal(nav.model_sha256,createHash('sha256').update(fs.readFileSync(new URL('./home-model.glb',import.meta.url))).digest('hex'));
  for(const p of Object.values(nav.starts))assert.ok(isWalkable(nav,p.x,p.y));

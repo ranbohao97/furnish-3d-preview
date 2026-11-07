@@ -43,7 +43,7 @@ const views={
  store:{p:[5.15,4.77,1.45],t:[6.46,4.80,1.2],fov:78,title:'L 形封闭储物区',note:'新版 CAD：门线 x=6260 mm，双门总宽 750 mm；内部为带结构凹角的 L 形，外包约 1610 × 1000 mm。可查看柜内浅层板。'},
  kitchen:{p:[3.05,5.20,1.60],t:[2.20,1.55,1.08],fov:73,title:'餐厅 · 厨房',note:'圆桌与四椅按新 CAD 占位，餐椅西侧静态净距约 480 mm。白色橱柜无吊柜；水龙头按 CAD 调整至餐厅侧，操作面朝厨房。扫地机移入窗下设备柜，预留上下水与检修口。'},
  study:{p:[5.10,5.11,1.55],t:[3.8,7.7,1.1],fov:75,title:'双人工位 · 装饰隔断',note:'按白模采用实体隔断与顶部方格装饰。下侧工位只放笔记本，上侧保留显示器。'},
- wardrobe:{p:[8.58,6.35,1.65],t:[6.95,7.72,1.22],fov:83,title:'主卧 · 柜体与收口',note:'两组衣柜补齐端侧板、上下收口与内退底座，移除旧侧移门。可在场景设置中查看柜内，侧板与背板保持可见。'},
+ wardrobe:{p:[8.58,6.35,1.65],t:[6.95,7.72,1.22],fov:83,title:'主卧 · 柜体与收口',note:'主卧门靠手工桌侧按 CAD 补齐 720 × 120 mm 封墙。两组衣柜补齐端侧板、上下收口与内退底座，移除旧侧移门。可在场景设置中查看柜内，侧板与背板保持可见。'},
  master:{p:[7.55,6.16,1.60],t:[8.65,8.30,1.10],fov:79,title:'主卧 · 封闭衣柜',note:'按新版 CAD：床尾衣柜深 550 mm，床尾静态净距约 450 mm；入口另设浅柜及长衣柜。门按白模采用带透光中段的双扇门。'},
  guest:{p:[5.62,4.02,1.55],t:[6.92,2.48,.72],fov:79,title:'次卧 · 新版床与高柜',note:'按新版 CAD 占位重建 2000 × 1200 mm 床、床头柜和封闭高柜，入口门洞向走廊侧移约 500 mm。'},
  bath:{p:[8.68,5.56,1.58],t:[9.00,4.0,1.0],fov:85,title:'主卫',note:'依当前平面保留淋浴与帘隔。旧需求中的浴缸尚未落实到这版图纸。'},
@@ -148,7 +148,7 @@ async function loadModel(width=700){
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   $('loading').hidden=true;$('selection').hidden=true;
-  $('status').textContent=`模型已就绪 · v12.1 · ${width} mm`;
+  $('status').textContent=`模型已就绪 · v12.2 · ${width} mm`;
   window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
   try{localStorage.setItem('home3d.fridge-width.v1',String(width));}catch{}
  }catch(e){
