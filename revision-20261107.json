@@ -1,0 +1,37 @@
+{
+  "revision": "v12",
+  "cad_revision_date": "2026-11-07",
+  "sources": {
+    "cad_sha256": "b340fd96b72a704c46615ddb47c3db04c570a5e954e70f6b9add15872afec99d",
+    "white_model_pdf_sha256": "1032b9a8afb484e72a6961441f4ce959a17db10fb7e32816d31bc9c1a4515357",
+    "white_model_pages": 24
+  },
+  "precedence": [
+    "Revised CAD horizontal measurements",
+    "White-model elevations without dimensioned heights",
+    "Owner overrides: no coffee table, floor TV stand, no kitchen upper cupboards"
+  ],
+  "dimensions_mm": {
+    "entry": [
+      3250,
+      380,
+      2400
+    ],
+    "basin": [
+      600,
+      500
+    ],
+    "master_wardrobe_depth": 550,
+    "guest_bed": [
+      2000,
+      1200
+    ],
+    "store_door_width": 750
+  },
+  "height_assumptions_mm": {
+    "finished_clear_height": 2720,
+    "entry_cabinet": 2400,
+    "balcony_beam_clearance": 1960
+  },
+  "private_originals_published": false
+}

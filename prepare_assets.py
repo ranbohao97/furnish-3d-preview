@@ -26,7 +26,7 @@ footprint=[(.07,.91),(.07,8.70),(.76,8.70),(.76,10.23),(6.21,10.23),
  (8.06,2.87),(8.06,1.59),(4.21,1.59),(4.21,0),(1.87,0),(1.87,.91)]
 poly=Polygon(footprint)
 kitchen=box(1.79,.0,4.21,2.46)
-guestbath=Polygon([(3.71,3.8),(5.22,3.8),(5.22,1.83),(4.21,1.83),(4.21,2.7),(3.71,2.7)])
+guestbath=Polygon([(3.71,3.8),(4.37,3.8),(4.37,4.28),(5.22,4.28),(5.22,1.83),(4.21,1.83),(4.21,2.7),(3.71,2.7)])
 masterbath=box(8.06,3.11,9.56,5.77)
 bay=box(7.2,9.3,9.56,10.23)
 wood=poly.difference(kitchen.union(guestbath).union(masterbath).union(bay))
@@ -48,8 +48,8 @@ data={'footprint':footprint,
  'source_dwg':'private-source-plan.dwg',
  'style_source':'Private owner style brief',
  'style_revision':2312,
- 'design_revision':'使用动线优化 v2',
- 'design_changes':['厨房无吊柜','CAD三角洗手台','低鞋柜及换鞋凳','厨房柜门朝工作通道','三把日常餐椅及一把备用折叠椅','床尾正向挂衣浅柜','修正主卧柜前墙','次卧日床转向','家政与储物分区'],
+ 'design_revision':'新版CAD与白模重建 v12 / 2026-11-07',
+ 'design_changes':['新版墙体与门洞','600x500方形干区洗手台','L形封闭储物区','主卧550深衣柜','次卧2000x1200床','白模柜体立面与手工区','保留无厨房吊柜/无茶几/65寸落地电视'],
  'assumptions':['地面构造预留100mm，未获现场确认','家具为按图面占位重建的示意模型，非品牌精确模型','饰面、灯具和立面为风格演绎','主卫按当前图保留淋浴，浴缸待后续确认']}
 (ROOT/'model-data.json').write_text(json.dumps(data,ensure_ascii=False,indent=2))
 print('prepared',len(planks),'floor planks')
