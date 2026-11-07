@@ -58,7 +58,7 @@ const views={
  balcony:{p:[3.28,13.4,1.50],t:[3.28,10.11,1.18],fov:65,title:'阳台 · 四列外开封窗',note:'按图片 700 / 1600 / 1600 / 700 四列分格；中间两块通高固定玻璃，两侧上部向室外开启、下部固定。图示 4600 × 2300 mm，模型适配现有约 4560 mm 洞口；开扇展示 35°。'},
  laundry:{p:[3.9,9.3,1.55],t:[5.85,9.3,1.2],fov:70,title:'阳台 · 洗烘',note:'洗烘正面可操作；旁侧改为手工桌与小吊柜，扫地机器人移至厨房自动上下水设备柜。'}
 };
-function viewFov(v){if(current==='balcony' && host.clientWidth/host.clientHeight<.8)return 112;if(current==='entry' && host.clientWidth/host.clientHeight<.8)return 100;return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
+function viewFov(v){if(current==='masterdoor' && host.clientWidth/host.clientHeight<.8)return host.clientWidth/host.clientHeight<.55?112:102;if(current==='balcony' && host.clientWidth/host.clientHeight<.8)return 112;if(current==='entry' && host.clientWidth/host.clientHeight<.8)return 100;return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
 function setView(key,instant=false){
  if(walk?.active)walk.exit();
  const v=views[key];current=key;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('selected',b.dataset.view===key);b.setAttribute('aria-pressed',b.dataset.view===key)});
