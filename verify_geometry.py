@@ -18,7 +18,7 @@ checks={}
 def size(name):
  lo,hi=bound(name);return [round(float(v)*1000,1) for v in hi-lo]
 def near(actual,expected,tol=.5):assert abs(actual-expected)<=tol,(actual,expected)
-checks['revision']='v12.3 / whole-home wall and opening audit'
+checks['revision']='v12.4 / living-area colour study'
 assert size('新版上侧独立书桌')==[700.0,1400.0,40.0]
 assert size('新版下侧独立书桌')==[700.0,1400.0,40.0]
 lo,hi=bound('圆餐桌桌面');assert abs((lo[0]+hi[0])/2-2.09)<.001 and abs((lo[1]+hi[1])/2-3.42)<.001

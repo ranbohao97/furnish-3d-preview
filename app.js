@@ -33,6 +33,7 @@ let walk=null;
 let model=null,move=null,current='overview';let meshCount=0;
 const V=(x,y,z)=>new THREE.Vector3(x,z,-y);
 const views={
+ palette:{p:[3.15,4.12,1.62],t:[.52,5.10,1.15],fov:70,title:'客厅配色 · 餐边展示柜',note:'暖米白与浅蜜木色打底，红棕餐边下柜、灰橄榄手工吊柜、深石墨绿主卧玻璃门框。木质、漆面、玻璃与银色五金组合；配色为方案示意。'},
  overview:{p:[-3.7,-5.5,10.4],t:[4.7,5.2,.4],fov:43,title:'全屋轴测',note:'剖切墙体，查看客餐厨、双人工位与卧室之间的关系。',cut:true},
  plan:{p:[4.9,5.0,20.7],t:[4.9,5.1,0],fov:36,title:'俯视布局',note:'上方为南向窗面。可打开 CAD 线稿，核对家具与墙体平面。',cut:true},
  tv:{p:[2.45,5.70,1.40],t:[.56,7.06,1.0],fov:67,title:'客厅 · 65英寸落地电视',note:'65英寸 16:9 屏幕，中心约高 1120 mm；取消电视柜和茶几，改用黑色落地支架与小型回音壁托盘。'},
@@ -148,7 +149,7 @@ async function loadModel(width=700){
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   $('loading').hidden=true;$('selection').hidden=true;
-  $('status').textContent=`模型已就绪 · v12.3 · ${width} mm`;
+  $('status').textContent=`模型已就绪 · v12.4 · ${width} mm`;
   window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
   try{localStorage.setItem('home3d.fridge-width.v1',String(width));}catch{}
  }catch(e){

@@ -12,6 +12,7 @@ from balcony_window import build_balcony_window
 from revised_interior import build_entry, build_detail, finish_revision, finish_layout
 from construction_details import finish_construction
 from architecture import wall_records, finish_door_frames
+from living_palette import apply_living_palette
 KITCHEN=layout(int(os.environ.get('FRIDGE_WIDTH_MM','700')))
 D=json.loads((ROOT/'model-data.json').read_text())
 random.seed(603)
@@ -620,6 +621,7 @@ finish_revision(globals())
 finish_layout(globals())
 finish_door_frames(globals())
 finish_construction(globals())
+apply_living_palette(bpy)
 
 # Lighting and named cameras. Full model is exported before display hiding.
 world=bpy.data.worlds.new('Warm daylight');world.use_nodes=True;world.node_tree.nodes['Background'].inputs[0].default_value=(.78,.84,.90,1);world.node_tree.nodes['Background'].inputs[1].default_value=.45;scene.world=world
@@ -665,7 +667,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='新版CAD与设计师白模重建 v12.3 / 墙体门洞核查'
+scene['Project']='新版CAD与设计师白模重建 v12.4 / 客厅中古包豪斯与阿尔托配色'
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'
