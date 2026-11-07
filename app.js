@@ -38,6 +38,7 @@ let walk=null;
 let model=null,move=null,current='overview';let meshCount=0;
 const V=(x,y,z)=>new THREE.Vector3(x,z,-y);
 const views={
+ lounge:{p:[3.35,7.50,1.60],t:[1.90,9.30,.63],fov:58,title:'阳台 · 休闲躺椅',note:'绿色软包搭配银色管架，后倾靠背与落地椅脚；旁侧设小边几，与绿植、窗面留出间隙。'},
  masterdoor:{p:[4.35,5.80,1.68],t:[6.26,5.70,1.25],fov:83,title:'主卧门 · 原位与内移对比',note:MASTER_LAYOUTS.current.note},
  palette:{p:[3.15,4.12,1.62],t:[.52,5.10,1.15],fov:70,title:'客厅配色 · 餐边展示柜',note:'暖米白与浅蜜木色打底，红棕餐边下柜、灰橄榄手工吊柜、深石墨绿主卧玻璃门框。木质、漆面、玻璃与银色五金组合；配色为方案示意。'},
  overview:{p:[-3.7,-5.5,10.4],t:[4.7,5.2,.4],fov:43,title:'全屋轴测',note:'剖切墙体，查看客餐厨、双人工位与卧室之间的关系。',cut:true},
@@ -59,7 +60,7 @@ const views={
  balcony:{p:[3.28,13.4,1.50],t:[3.28,10.11,1.18],fov:65,title:'阳台 · 四列外开封窗',note:'按图片 700 / 1600 / 1600 / 700 四列分格；中间两块通高固定玻璃，两侧上部向室外开启、下部固定。图示 4600 × 2300 mm，模型适配现有约 4560 mm 洞口；开扇展示 35°。'},
  laundry:{p:[3.9,9.3,1.55],t:[5.85,9.3,1.2],fov:70,title:'阳台 · 洗烘',note:'洗烘正面可操作；旁侧改为手工桌与小吊柜，扫地机器人移至厨房自动上下水设备柜。'}
 };
-function viewFov(v){if(current==='masterdoor' && host.clientWidth/host.clientHeight<.8)return host.clientWidth/host.clientHeight<.55?112:102;if(current==='balcony' && host.clientWidth/host.clientHeight<.8)return 112;if(current==='entry' && host.clientWidth/host.clientHeight<.8)return 100;return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
+function viewFov(v){if(current==='lounge' && host.clientWidth/host.clientHeight<.8)return 85;if(current==='masterdoor' && host.clientWidth/host.clientHeight<.8)return host.clientWidth/host.clientHeight<.55?112:102;if(current==='balcony' && host.clientWidth/host.clientHeight<.8)return 112;if(current==='entry' && host.clientWidth/host.clientHeight<.8)return 100;return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
 function setView(key,instant=false){
  if(walk?.active)walk.exit();
  const v=views[key];current=key;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('selected',b.dataset.view===key);b.setAttribute('aria-pressed',b.dataset.view===key)});
@@ -159,7 +160,7 @@ function describeTV(){
  views.tv.note=text+'；电视中心及支架主体固定，回音壁托盘随大屏下调以留出间隙。';
  views.living.note=`按新版 CAD 与白模重建；${activeTV} 寸落地电视、无茶几，双工位背后为实体装饰隔断。`;
  if(!walk?.active&&['tv','living'].includes(current)){$('view-title').textContent=views[current].title;$('view-note').textContent=views[current].note;}
- if(model)$('status').textContent=`v13.4 · ${MASTER_LAYOUTS[activeLayout].label} · 冰箱 ${activeWidth} mm · 电视 ${activeTV}″`;
+ if(model)$('status').textContent=`v13.5 · ${MASTER_LAYOUTS[activeLayout].label} · 冰箱 ${activeWidth} mm · 电视 ${activeTV}″`;
 }
 function changeTV(value){
  if(modelLoading||!model)return;

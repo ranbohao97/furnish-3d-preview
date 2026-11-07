@@ -14,6 +14,7 @@ from construction_details import finish_construction
 from architecture import wall_records, finish_door_frames
 from living_palette import apply_living_palette
 from master_door_layout import apply_master_inset
+from lounge_chair import build_lounge_chair, TABLE_CENTER
 KITCHEN=layout(int(os.environ.get('FRIDGE_WIDTH_MM','700')))
 D=json.loads((ROOT/'model-data.json').read_text())
 random.seed(603)
@@ -563,14 +564,10 @@ for room,x,y1,y2 in [('masterbath',9.545,3.12,5.76),('guestbath',5.205,1.85,4.27
       ya=y1+j*.15;yb=min(ya+.147,y2-.001);za=.035+k*.15
       if yb>ya:rect(room+'小方砖',x-.008,x,ya,yb,za,za+.147,'blue' if k<5 and room=='guestbath' else 'tile','BathroomWalls',room,.002)
 
-# A lounge chair by the south window, on a light tubular frame.
-cx,cy=1.60,9.39;a=math.radians(-25)
-box('休闲椅坐垫',(cx,cy,.43),(.72,.80,.19),'green','Furniture','living',.10,a)
-o=box('休闲椅靠背',(cx-.18,cy+.32,.78),(.74,.20,.77),'green','Furniture','living',.12,a);o.rotation_euler.x=-.18
-for xx in (-.34,.34):
- tube('休闲椅钢管',[(cx+xx,cy-.36,.06),(cx+xx,cy-.36,.38),(cx+xx,cy+.35,.38),(cx+xx,cy+.38,.88)],.018,room='living')
-cyl('休闲边几',(2.47,9.43,.48),.24,.035,'steel',room='living')
-cyl('休闲边几柱',(2.47,9.43,.26),.024,.44,'chrome',room='living')
+# One local coordinate frame keeps the upholstery and tubular base aligned.
+build_lounge_chair(globals())
+cyl('休闲边几',(*TABLE_CENTER,.48),.24,.035,'steel',room='living')
+cyl('休闲边几柱',(*TABLE_CENTER,.26),.024,.44,'chrome',room='living')
 
 def lamp(name,x,y,z=2.1,r=.20,room='shared'):
     tube(name+'吊线',[(x,y,z+r),(x,y,H)],.006,'black','Lighting',room)
