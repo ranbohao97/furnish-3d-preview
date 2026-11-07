@@ -2,6 +2,9 @@ import * as THREE from './three.module.min.js';
 import {OrbitControls} from './OrbitControls.js';
 import {GLTFLoader} from './GLTFLoader.js';
 import {applyTVSize,tvSpec,tvNavigation,tvGLB} from './tv-options.js';
+import catalog from './edit-catalog.json';
+import {bindItems,itemId,editedNavigation,editedGLB} from './item-edit.js';
+import {createItemEditor} from './item-editor-ui.js';
 import {createWalkthrough} from './walkthrough.js';
 import nav700 from './navigation.json';
 import nav600 from './navigation-600.json';
@@ -34,7 +37,7 @@ const fillLight=new THREE.DirectionalLight(0xc9dcff,1.1);fillLight.position.set(
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0xe8e4da,roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.205;scene.add(floor);
 setupViewerUI();
 
-let walk=null;
+let walk=null,editor=null;
 let model=null,move=null,current='overview';let meshCount=0;
 const V=(x,y,z)=>new THREE.Vector3(x,z,-y);
 const views={
@@ -63,7 +66,7 @@ const views={
 function viewFov(v){if(current==='lounge' && host.clientWidth/host.clientHeight<.8)return 85;if(current==='masterdoor' && host.clientWidth/host.clientHeight<.8)return host.clientWidth/host.clientHeight<.55?112:102;if(current==='balcony' && host.clientWidth/host.clientHeight<.8)return 112;if(current==='entry' && host.clientWidth/host.clientHeight<.8)return 100;return v.cut && host.clientWidth/host.clientHeight<.8 ? 68 : v.fov;}
 function setView(key,instant=false){
  if(walk?.active)walk.exit();
- const v=views[key];current=key;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('selected',b.dataset.view===key);b.setAttribute('aria-pressed',b.dataset.view===key)});
+ editor?.clear();const v=views[key];current=key;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('selected',b.dataset.view===key);b.setAttribute('aria-pressed',b.dataset.view===key)});
  $('view-title').textContent=v.title;$('view-note').textContent=v.note;
  $('door-comparison').hidden=key!=='masterdoor';
  $('cut').checked=!!v.cut;$('roof').checked=!v.cut;$('cad').checked=false;
@@ -81,6 +84,7 @@ const furnishing=new Set(['Furniture','Storage','Appliances','Decor','Lighting']
 function category(o){let n=o;while(n){if(n.userData?.category)return n.userData.category;n=n.parent;}return '';}
 function updateLayers(){
  if(!model)return;
+ const removed=editor?.deleted||new Set();
  model.traverse(o=>{
   const cat=o.userData?.category;if(!cat)return;
   let visible=true;
@@ -93,11 +97,11 @@ function updateLayers(){
   }
   if(furnishing.has(cat)&&!$('furniture').checked)visible=false;
   if((o.userData.front_panel || /柜门拉手|抽屉拉手|家政柜门把手|三角盆柜斜面拉手/.test(o.name)) && $('internals').checked)visible=false;
-  o.visible=visible;
+  o.visible=visible&&!removed.has(itemId(o));
  });
  cadLines.visible=$('cad').checked;
  usageOverlay.visible=$('usage').checked;
- $('pipe-legend').hidden=!$('pipes').checked;
+ $('pipe-legend').hidden=!$('pipes').checked;editor?.clear();
 }
 const coords=[];for(const l of window.CAD_LINES){for(let i=1;i<l.length;i++){for(const p of [l[i-1],l[i]])coords.push(p[0]/1000,.038,-p[1]/1000)}}
 const cadGeo=new THREE.BufferGeometry();cadGeo.setAttribute('position',new THREE.Float32BufferAttribute(coords,3));
@@ -113,15 +117,6 @@ dimension([7.068,7.2,.06],[7.515,7.2,.06],'床尾最窄约 450 mm');
 dimension([6.9,3.03,.06],[6.9,3.63,.06],'次卧柜前约 600 mm');
 const route=[[1.18,1.25,.05],[1.18,3.1,.05],[1.18,4.65,.05],[2.5,5.05,.05],[4.95,5.3,.05],[5.22,6.2,.05],[5.22,8.85,.05]].map(p=>V(...p));
 const pathLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(route),new THREE.LineDashedMaterial({color:0x557650,dashSize:.12,gapSize:.07,depthTest:false}));pathLine.computeLineDistances();pathLine.renderOrder=107;usageOverlay.add(pathLine);
-const raycaster=new THREE.Raycaster();const pointer=new THREE.Vector2();let down=null;
-renderer.domElement.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);
-renderer.domElement.addEventListener('pointerup',e=>{
- if(walk?.active||!model||!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>4)return;
- const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);
- const hit=raycaster.intersectObject(model,true).find(h=>{let p=h.object;while(p){if(!p.visible)return false;p=p.parent;}return true});
- if(hit){let n=hit.object;while(n.parent&&!n.userData.category)n=n.parent;
- $('selection').textContent=n.name.replace(/_\d+$/,'');$('selection').hidden=false;}
-});
 let modelLoading=false;
 let activeTV=65;try{activeTV=tvSpec(localStorage.getItem('home3d.tv-size.v1')).inches;}catch{}
 let modelBytes,activeWidth=700,retryWidth=700,activeLayout='current',retryLayout='current';
@@ -160,12 +155,17 @@ function describeTV(){
  views.tv.note=text+'；电视中心及支架主体固定，回音壁托盘随大屏下调以留出间隙。';
  views.living.note=`按新版 CAD 与白模重建；${activeTV} 寸落地电视、无茶几，双工位背后为实体装饰隔断。`;
  if(!walk?.active&&['tv','living'].includes(current)){$('view-title').textContent=views[current].title;$('view-note').textContent=views[current].note;}
- if(model)$('status').textContent=`v13.5 · ${MASTER_LAYOUTS[activeLayout].label} · 冰箱 ${activeWidth} mm · 电视 ${activeTV}″`;
+ if(model)$('status').textContent=`v13.6 · ${MASTER_LAYOUTS[activeLayout].label} · 冰箱 ${activeWidth} mm · 电视 ${activeTV}″`;
+}
+function refreshNavigation(){
+ const removed=editor?.deleted||new Set();
+ const base=editedNavigation(navOptions[activeLayout][activeWidth],removed);
+ Object.assign(navigation,removed.has('tv')?base:tvNavigation(base,activeTV));
 }
 function changeTV(value){
  if(modelLoading||!model)return;
  activeTV=tvSpec(value).inches;applyTVSize(model,activeTV);
- Object.assign(navigation,tvNavigation(navOptions[activeLayout][activeWidth],activeTV));
+ refreshNavigation();editor?.refresh();
  const relocated=walk?.revalidatePosition();describeTV();
  $('walk-config-status').textContent=relocated?'电视尺寸已更新，已移至附近可通行位置，朝向保持。':'电视尺寸已更新，当前位置与朝向保持。';
  try{localStorage.setItem('home3d.tv-size.v1',String(activeTV));}catch{}
@@ -178,7 +178,7 @@ function walkConfigBusy(busy){
 }
 async function loadModel(width=700,layout=activeLayout){
  if(modelLoading)return;
- modelLoading=true;$('tv-size').disabled=true;walk?.setBusy(true);walkConfigBusy(true);
+ modelLoading=true;editor?.clear();editor?.setBusy(true);$('tv-size').disabled=true;walk?.setBusy(true);walkConfigBusy(true);
  $('walk-config-retry').hidden=true;
  $('walk-config-status').textContent='正在切换配置，请稍候…';
  const choice=modelChoice(width,layout);width=choice.width;layout=choice.layout;
@@ -200,11 +200,12 @@ async function loadModel(width=700,layout=activeLayout){
    }});
    entry={scene:g.scene,bytes:new Uint8Array(buffer),count};
   }
+  bindItems(entry.scene,catalog.models[choice.key].members);
   applyTVSize(entry.scene,activeTV);
   const first=!model;if(model)scene.remove(model);
   model=entry.scene;modelBytes=entry.bytes;meshCount=entry.count;scene.add(model);
   modelCache.delete(choice.key);modelCache.set(choice.key,entry);trimModelCache();
-  Object.assign(navigation,tvNavigation(navOptions[layout][width],activeTV));activeWidth=width;activeLayout=layout;describeLayout();
+  activeWidth=width;activeLayout=layout;refreshNavigation();describeLayout();
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   const relocated=walk?.revalidatePosition();
@@ -222,11 +223,12 @@ async function loadModel(width=700,layout=activeLayout){
   if(model)$('loading').hidden=true;
   else{$('loading').classList.add('failed');$('loading-text').textContent='模型加载失败，请在冰箱配置中点击重试。';}
  }finally{
-  modelLoading=false;$('tv-size').disabled=!model;walk?.setBusy(false);walkConfigBusy(false);
+  modelLoading=false;editor?.setBusy(!model);$('tv-size').disabled=!model;walk?.setBusy(false);walkConfigBusy(false);
   $('fridge-width').disabled=false;$('walk-start').disabled=!model;$('download').disabled=!model;
   layoutDisabled(false);
  }
 }
+editor=createItemEditor({scene,camera,canvas:renderer.domElement,catalog,getModel:()=>model,getWalk:()=>walk,isBusy:()=>modelLoading||!model,onChange(){updateLayers();refreshNavigation();walk?.revalidatePosition();}});
 let savedWidth=700,savedLayout='current';try{const stored=Number(localStorage.getItem('home3d.fridge-width.v1'));if(kitchenOptions[stored])savedWidth=stored;const layout=localStorage.getItem('home3d.master-layout.v1');if(Object.hasOwn(MASTER_LAYOUTS,layout))savedLayout=layout;}catch{}
 describeTV();
 $('tv-size').addEventListener('change',e=>changeTV(e.target.value));
@@ -239,7 +241,7 @@ $('config-retry').addEventListener('click',()=>loadModel(retryWidth,retryLayout)
 const walkConfig=$('walk-config-dialog');
 function openWalkConfig(){
  if(!walk?.active)return;
- walk.pause();syncWalkConfig();
+ editor?.close();walk.pause();syncWalkConfig();
  $('walk-config-status').textContent='切换时保留当前位置和朝向；被新墙体或家具占用时就近避让。';
  $('walk-config-retry').hidden=true;walkConfig.showModal();
 }
@@ -256,11 +258,11 @@ for(const id of ['cut','roof','furniture','cad','internals','usage'])$(id).addEv
 for(const id of ['pipes','walk-pipes'])$(id).addEventListener('change',()=>{const on=$(id).checked;$('pipes').checked=on;$('walk-pipes').checked=on;updateLayers();});
 $('reset').addEventListener('click',()=>setView(current));
 $('capture').addEventListener('click',()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='全屋_'+(walk?.active?'第一人称漫游':views[current].title)+'.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
-$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=tvGLB(modelBytes,activeTV);const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_${activeLayout==='inset'?'主卧门内移':'当前方案'}_冰箱${activeWidth}mm_电视${activeTV}寸.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=editedGLB(tvGLB(modelBytes,activeTV),catalog.models[modelChoice(activeWidth,activeLayout).key].members,editor.deleted);const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_${activeLayout==='inset'?'主卧门内移':'当前方案'}_冰箱${activeWidth}mm_电视${activeTV}寸${editor.deleted.size?'_自定义':''}.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 $('info').addEventListener('click',()=>{walk?.pause();$('details').showModal()});$('close-info').addEventListener('click',()=>$('details').close());
 walk=createWalkthrough({camera,canvas:renderer.domElement,nav:navigation,host,
  onEnter(){
-  const saved={position:camera.position.clone(),target:controls.target.clone(),fov:camera.fov,layers:{}};
+  editor?.close();const saved={position:camera.position.clone(),target:controls.target.clone(),fov:camera.fov,layers:{}};
   move=null;controls.enabled=false;$('fridge-width').disabled=true;
   layoutDisabled(true);$('door-comparison').hidden=true;
   for(const id of ['cut','roof','furniture','cad','internals','usage']){saved.layers[id]=$(id).checked;$(id).disabled=true;}
@@ -269,7 +271,7 @@ walk=createWalkthrough({camera,canvas:renderer.domElement,nav:navigation,host,
   camera.fov=72;camera.updateProjectionMatrix();return saved;
  },
  onExit(saved){
-  $('fridge-width').disabled=false;controls.enabled=true;camera.position.copy(saved.position);controls.target.copy(saved.target);camera.fov=saved.fov;camera.updateProjectionMatrix();
+  editor?.close();  $('fridge-width').disabled=false;controls.enabled=true;camera.position.copy(saved.position);controls.target.copy(saved.target);camera.fov=saved.fov;camera.updateProjectionMatrix();
   layoutDisabled(false);$('door-comparison').hidden=current!=='masterdoor';
   for(const [id,value]of Object.entries(saved.layers)){$(id).checked=value;$(id).disabled=false;}updateLayers();
   $('view-title').textContent=views[current].title;$('view-note').textContent=views[current].note;

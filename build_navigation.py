@@ -23,6 +23,11 @@ def matrix(n):
  m[:3,:3]=np.array([[1-2*(y*y+z*z),2*(x*y-z*w),2*(x*z+y*w)],[2*(x*y+z*w),1-2*(x*x+z*z),2*(y*z-x*w)],[2*(x*z-y*w),2*(y*z+x*w),1-2*(x*x+y*y)]])@np.diag(n.get('scale',[1,1,1]));m[:3,3]=n.get('translation',[0,0,0]);return m
 parents={c:i for i,n in enumerate(g['nodes'])for c in n.get('children',[])}
 def world(i):return (world(parents[i])if i in parents else np.eye(4))@matrix(g['nodes'][i])
+catalog=json.loads((R/'edit-catalog.json').read_text())
+model_hash=hashlib.sha256(blob).hexdigest()
+entry=next((e for e in catalog['models'].values()if e['model_sha256']==model_hash),None)
+if entry is None:raise ValueError('Rebuild edit-catalog.json for this model first')
+members=entry['members'];item_shapes={};fixed_shapes=[]
 obstacles=[];structure=[];included=0
 for i,n in enumerate(g['nodes']):
  if 'mesh'not in n or n.get('extras',{}).get('category')not in {'WallsLow','WallsUpper','BathroomWalls','Windows','Doors','Storage','Furniture','Appliances','Exterior','ServiceEnclosures'}:continue
@@ -37,6 +42,9 @@ for i,n in enumerate(g['nodes']):
   polys.extend(Polygon(t)for t in tri[area>1e-9])
  if polys:
   shape=unary_union(polys);obstacles.append(shape);included+=1
+  ident=members.get(n['name'])
+  if ident:item_shapes.setdefault(ident,[]).append(shape)
+  else:fixed_shapes.append(shape)
   if n.get('extras',{}).get('category') in {'WallsLow','WallsUpper','BathroomWalls','Windows','Exterior','ServiceEnclosures'}:structure.append(shape)
 step=.04;radius=.20
 footprint=Polygon(json.loads((R/'model-data.json').read_text())['footprint'])
@@ -66,5 +74,16 @@ for name,(x,y)in starts.items():
  ys,xs=np.where(free);k=np.argmin((xx[ys,xs]-x)**2+(yy[ys,xs]-y)**2);a,b=xs[k],ys[k]
  resolved[name]={'x':round(float(xx[b,a]),3),'y':round(float(yy[b,a]),3),'component':int(labels[b,a]),'connectedToEntry':bool(labels[b,a]==main)}
 data={'model_sha256':hashlib.sha256(blob).hexdigest(),'step':step,'radius':radius,'eyeHeight':1.6,'bodyTop':1.85,'width':nx,'height':ny,'rows':[''.join('.'if c else '#'for c in row)for row in free],'starts':resolved,'obstacleMeshes':included,'structureRows':[''.join('.'if c else '#'for c in row)for row in structure_free]}
+# Each item retains its own buffered occupied cells: deleting one object must
+# never clear cells occupied by an overlapping neighbor or by the building.
+def spans(mask):
+ result=[]
+ for y,row in enumerate(mask):
+  indices=np.flatnonzero(np.diff(np.r_[False,row,False].astype(int)))
+  result.extend([int(y),int(a),int(b)]for a,b in zip(indices[::2],indices[1::2]))
+ return result
+fixed=footprint.buffer(-margin).difference(unary_union(fixed_shapes).buffer(margin))
+data['editFixedRows']=[''.join('.'if c else '#'for c in row)for row in contains_xy(fixed,xx,yy)]
+data['itemObstacles']={key:spans(contains_xy(unary_union(shapes).buffer(margin),xx,yy))for key,shapes in item_shapes.items()}
 (R/args.output).write_text(json.dumps(data,ensure_ascii=False,separators=(',',':'))+'\n')
 print(json.dumps({'obstacleMeshes':included,'components':sorted([len(c)for c in components],reverse=True)[:10],'starts':resolved},ensure_ascii=False,indent=2))

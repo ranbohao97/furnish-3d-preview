@@ -1,7 +1,7 @@
 import {moveOnGrid,movementVector,nearestWalkable,navigationMode} from './navigation.js';
 export function createWalkthrough({camera,canvas,nav,host,onEnter,onExit}){
  const $=id=>document.getElementById(id),keys=new Set();
- let active=false,paused=false,busy=false,yaw=0,pitch=0,drag=null,saved=null,lastHud=0;
+ let active=false,paused=false,busy=false,editing=false,yaw=0,pitch=0,drag=null,saved=null,lastHud=0;
  const startButton=$('walk-start'),bar=$('walk-bar'),pausePanel=$('walk-pause');
  $('walk-lock').hidden=typeof canvas.requestPointerLock!=='function';
  canvas.tabIndex=0;canvas.setAttribute('aria-label','三维画面；漫游中使用 WASD 行走，方向键转头');
@@ -10,7 +10,7 @@ export function createWalkthrough({camera,canvas,nav,host,onEnter,onExit}){
  function hud(){
   $('walk-position').textContent=`视高 1.60 m · 位置 ${camera.position.x.toFixed(2)}, ${(-camera.position.z).toFixed(2)} m`;
   $('walk-input').textContent=document.pointerLockElement===canvas?'WASD 行走 · 鼠标转头 · Esc 暂停':'WASD 行走 · 拖动画面转头 · ← → 转向 · Esc 暂停';
-  pausePanel.hidden=!active||!paused;
+  pausePanel.hidden=!active||!paused||editing;
  }
  function unlock(){if(document.pointerLockElement===canvas)document.exitPointerLock();}
  function pause(){if(!active)return;paused=true;clear();unlock();hud();}
@@ -24,10 +24,10 @@ export function createWalkthrough({camera,canvas,nav,host,onEnter,onExit}){
   startButton.hidden=true;bar.hidden=false;$('selection').hidden=true;relocate('entry');canvas.focus();
  }
  function exit(){
-  if(!active)return;active=false;paused=false;clear();unlock();host.classList.remove('walking');document.body.classList.remove('walk-mode');
+  if(!active)return;active=false;paused=false;editing=false;clear();unlock();host.classList.remove('walking');document.body.classList.remove('walk-mode');
   startButton.hidden=false;bar.hidden=true;pausePanel.hidden=true;onExit(saved);startButton.focus();
  }
- function resume(){if(!active||busy)return;paused=false;clear();canvas.focus();hud();}
+ function resume(){if(!active||busy||editing)return;paused=false;clear();canvas.focus();hud();}
  async function lockMouse(){
   if(!active)return;resume();
   try{await canvas.requestPointerLock();}catch{hud();$('walk-input').textContent='当前浏览器未启用鼠标锁定，可拖动画面转头，WASD 行走。';}
@@ -39,7 +39,7 @@ export function createWalkthrough({camera,canvas,nav,host,onEnter,onExit}){
  }
  const moveKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown']);
  window.addEventListener('keydown',e=>{
-  if(!active)return;
+  if(!active||editing||e.defaultPrevented)return;
   if(document.querySelector('dialog[open]'))return;
   if(e.code==='Escape'){e.preventDefault();pause();return;}
   if(paused||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('button,input,select,textarea,dialog'))return;
@@ -74,6 +74,7 @@ export function createWalkthrough({camera,canvas,nav,host,onEnter,onExit}){
  $('walk-resume').addEventListener('click',resume);$('walk-stop').addEventListener('click',exit);$('walk-home').addEventListener('click',()=>{relocate('entry');resume();});
  $('walk-room').addEventListener('change',e=>{relocate(e.target.value);resume();});
  return {get active(){return active;},pause,resume,exit,
+  setEditing(value){if(!active)return;editing=!!value;if(editing)pause();else resume();},
   setBusy(value){busy=value;if(value)pause();},
   revalidatePosition(){
    if(!active)return false;

@@ -6,10 +6,12 @@ import {build} from 'esbuild';
 import {MASTER_LAYOUTS,modelChoice} from './model-options.js';
 const root=path.dirname(fileURLToPath(import.meta.url));
 const options=JSON.parse(fs.readFileSync(path.join(root,'kitchen-options.json'),'utf8'));
+const editCatalog=JSON.parse(fs.readFileSync(path.join(root,'edit-catalog.json'),'utf8'));
 const modelUrls={};
 for(const layout of Object.keys(MASTER_LAYOUTS))for(const width of Object.keys(options)){
  const option=modelChoice(width,layout);
  const modelHash=createHash('sha256').update(fs.readFileSync(path.join(root,option.model))).digest('hex');
+ if(editCatalog.models[option.key]?.model_sha256!==modelHash)throw new Error(`Item catalog for ${option.key} is stale.`);
  if(JSON.parse(fs.readFileSync(path.join(root,option.navigation),'utf8')).model_sha256!==modelHash)throw new Error(`Navigation for ${width} mm is stale.`);
  modelUrls[option.key]=`./${option.model}?v=${modelHash.slice(0,12)}`;
 }
