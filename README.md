@@ -1,10 +1,28 @@
-# 全屋三维预览 v12.4
+# 全屋三维预览 v13
 
 [打开在线预览](https://ranbohao97.github.io/furnish-3d-preview/)
 
 根据 2026-11-07 修改版 CAD 和设计师 24 页白模重建。以新版 CAD 控制平面占位，以白模补充柜体、门与吊顶立面；保留业主确认的厨房无吊柜、无茶几、65 英寸落地支架电视。三档冰箱、WASD 漫游、CAD 叠合、柜内查看与管道高亮延续。
 
 本仓库仅包含预览代码、模型与可复建的几何资料；原始 PDF / DWG、门牌信息、私人文档链接和装修业务资料不公开。
+
+## v13：主卧门内移方案对比（2026-11-07）
+
+新增“19 主卧门方案对比”。可在画面按钮或场景设置中切换当前方案 / 内移方案，同一视角比较；方案与冰箱宽度分别记忆。两套布局均支持 600 / 700 / 800 mm、漫游、柜内检视、管道高亮及所选 GLB 下载。最多保留两个场景缓存，避免连续切换六个组合后累积显存。
+
+内移基准是储藏室柜门朝过道的正面 x=6260 mm；原主卧玻璃门框正面 x=5590 mm，整套双门向内 670 mm。1100 mm 门洞保持，两侧封墙、门顶过梁和吊顶联动。原 680 × 310 mm 主卧入口浅柜取消，改为朝过道的 600 × 310 mm 浅柜，配齐侧板、顶封和踢脚端回板。衣柜、床、手工桌和储藏室门位置不变。门板齐平，门套和拉手的凸出量各按原构造保留。
+
+内移布局是业主指定的对比设计，并非原 CAD 布局。CAD 叠合仍显示原图作为比较基准。墙体高度和柜体立面沿用概念标高。
+
+`master_door_layout.py` 定义联动调整；`architecture.py` 生成当前或内移墙壳。`export_master_inset.py` 从当前方案三档 Blender 导出内移模型；全量构建可设 `MASTER_DOOR_LAYOUT=inset`。`model-options.js` 统一六个配置文件名称。`verify_master_inset.py` 核查门位移、柜体尺寸、非关联对象不变、齐平、围合及门洞。导航测试覆盖六个组合。
+
+```sh
+# BASE_DIR contains current-layout 600mm/700mm/800mm/全屋模型.blend.
+MODEL_PYTHON=/path/to/python-with-shapely blender -b --python export_master_inset.py -- BASE_DIR OUTPUT_DIR
+# Repeat for each width, then npm test && npm run build.
+python build_navigation.py --model home-model-inset-700.glb --output navigation-inset-700.json
+python verify_master_inset.py --base home-model.glb --model home-model-inset-700.glb --output inset-check.json
+```
 
 ## v12.4：客厅中古包豪斯＋阿尔托配色（2026-11-07）
 

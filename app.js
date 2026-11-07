@@ -5,8 +5,12 @@ import {createWalkthrough} from './walkthrough.js';
 import nav700 from './navigation.json';
 import nav600 from './navigation-600.json';
 import nav800 from './navigation-800.json';
+import inset700 from './navigation-inset-700.json';
+import inset600 from './navigation-inset-600.json';
+import inset800 from './navigation-inset-800.json';
+import {MASTER_LAYOUTS,modelChoice} from './model-options.js';
 import kitchenOptions from './kitchen-options.json';
-const navOptions={600:nav600,700:nav700,800:nav800};
+const navOptions={current:{600:nav600,700:nav700,800:nav800},inset:{600:inset600,700:inset700,800:inset800}};
 const navigation={...nav700};
 import {RoomEnvironment} from './RoomEnvironment.js';
 import {setupViewerUI} from './viewer-ui.js';
@@ -33,6 +37,7 @@ let walk=null;
 let model=null,move=null,current='overview';let meshCount=0;
 const V=(x,y,z)=>new THREE.Vector3(x,z,-y);
 const views={
+ masterdoor:{p:[4.35,5.80,1.68],t:[6.26,5.70,1.25],fov:83,title:'主卧门 · 原位与内移对比',note:MASTER_LAYOUTS.current.note},
  palette:{p:[3.15,4.12,1.62],t:[.52,5.10,1.15],fov:70,title:'客厅配色 · 餐边展示柜',note:'暖米白与浅蜜木色打底，红棕餐边下柜、灰橄榄手工吊柜、深石墨绿主卧玻璃门框。木质、漆面、玻璃与银色五金组合；配色为方案示意。'},
  overview:{p:[-3.7,-5.5,10.4],t:[4.7,5.2,.4],fov:43,title:'全屋轴测',note:'剖切墙体，查看客餐厨、双人工位与卧室之间的关系。',cut:true},
  plan:{p:[4.9,5.0,20.7],t:[4.9,5.1,0],fov:36,title:'俯视布局',note:'上方为南向窗面。可打开 CAD 线稿，核对家具与墙体平面。',cut:true},
@@ -58,6 +63,7 @@ function setView(key,instant=false){
  if(walk?.active)walk.exit();
  const v=views[key];current=key;document.querySelectorAll('[data-view]').forEach(b=>{b.classList.toggle('selected',b.dataset.view===key);b.setAttribute('aria-pressed',b.dataset.view===key)});
  $('view-title').textContent=v.title;$('view-note').textContent=v.note;
+ $('door-comparison').hidden=key!=='masterdoor';
  $('cut').checked=!!v.cut;$('roof').checked=!v.cut;$('cad').checked=false;
  controls.minDistance=v.cut?5:.25;controls.maxDistance=v.cut?35:9;
  controls.maxPolarAngle=v.cut?Math.PI*.49:Math.PI*.80;
@@ -114,8 +120,26 @@ renderer.domElement.addEventListener('pointerup',e=>{
  if(hit){let n=hit.object;while(n.parent&&!n.userData.category)n=n.parent;
  $('selection').textContent=n.name.replace(/_\d+$/,'');$('selection').hidden=false;}
 });
-let modelBytes,activeWidth=700,retryWidth=700;
+let modelBytes,activeWidth=700,retryWidth=700,activeLayout='current',retryLayout='current';
 const modelCache=new Map();
+function layoutDisabled(disabled){
+ $('master-layout').disabled=disabled;
+ document.querySelectorAll('[data-master-layout]').forEach(b=>b.disabled=disabled);
+}
+function describeLayout(){
+ const option=MASTER_LAYOUTS[activeLayout];$('master-layout').value=activeLayout;
+ $('layout-status').textContent=option.note+(activeLayout==='inset'?' CAD 叠合显示原方案作为比较基准。':'');
+ views.masterdoor.note=option.note;if(current==='masterdoor')$('view-note').textContent=option.note;
+ document.querySelectorAll('[data-master-layout]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.masterLayout===activeLayout)));
+}
+function trimModelCache(){
+ while(modelCache.size>2){
+  const [key,entry]=modelCache.entries().next().value;modelCache.delete(key);
+  const geometries=new Set(),materials=new Set(),textures=new Set();
+  entry.scene.traverse(o=>{if(o.isMesh){geometries.add(o.geometry);const original=originalMaterials.get(o)||o.material;for(const m of Array.isArray(original)?original:[original]){materials.add(m);for(const t of Object.values(m))if(t?.isTexture)textures.add(t);}}});
+  geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());
+ }
+}
 $('download').disabled=true;
 function describeKitchen(width){
  const k=kitchenOptions[width];
@@ -123,17 +147,17 @@ function describeKitchen(width){
  views.fridge.note=`富士白冰箱：${width===600?'上单门':'上双门'}、下双抽屉。冰箱宽 ${width} mm；左侧高柜固定 ${k.pantry_width_mm} mm，窗侧柜 ${k.robot_width_mm} mm，进出洞口保持 430 mm。`;
  if(current==='fridge')$('view-note').textContent=views.fridge.note;
 }
-async function loadModel(width=700){
- width=Number(width);if(!kitchenOptions[width])width=700;
- retryWidth=width;$('config-retry').hidden=true;
+async function loadModel(width=700,layout=activeLayout){
+ const choice=modelChoice(width,layout);width=choice.width;layout=choice.layout;
+ retryWidth=width;retryLayout=layout;$('config-retry').hidden=true;layoutDisabled(true);
  $('fridge-width').disabled=true;$('walk-start').disabled=true;$('download').disabled=true;
  $('loading').hidden=false;$('loading').classList.remove('failed');
- $('loading-text').textContent=`正在载入 ${width} mm 冰箱及配套橱柜`;
+ $('loading-text').textContent=`正在载入${MASTER_LAYOUTS[layout].label} · ${width} mm 冰箱`;
  $('config-status').textContent=`正在切换到 ${width} mm…`;
  try {
-  let entry=modelCache.get(width);
+  let entry=modelCache.get(choice.key);
   if(!entry){
-   const response=await fetch(window.MODEL_VARIANTS[width]);
+   const response=await fetch(window.MODEL_VARIANTS[choice.key]);
    if(!response.ok)throw new Error(`HTTP ${response.status}`);
    const buffer=await response.arrayBuffer();
    const g=await new GLTFLoader().parseAsync(buffer,'');
@@ -141,41 +165,47 @@ async function loadModel(width=700){
    g.scene.traverse(o=>{if(o.isMesh){count++;o.castShadow=false;o.receiveShadow=false;
     const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{if(m.name==='透明玻璃'){m.transparent=true;m.opacity=.18;m.depthWrite=false;}m.envMapIntensity=.8;});
    }});
-   entry={scene:g.scene,bytes:new Uint8Array(buffer),count};modelCache.set(width,entry);
+   entry={scene:g.scene,bytes:new Uint8Array(buffer),count};
   }
   const first=!model;if(model)scene.remove(model);
   model=entry.scene;modelBytes=entry.bytes;meshCount=entry.count;scene.add(model);
-  Object.assign(navigation,navOptions[width]);activeWidth=width;
+  modelCache.delete(choice.key);modelCache.set(choice.key,entry);trimModelCache();
+  Object.assign(navigation,navOptions[layout][width]);activeWidth=width;activeLayout=layout;describeLayout();
   $('fridge-width').value=String(width);describeKitchen(width);
   if(first)setView('overview',true);else updateLayers();
   $('loading').hidden=true;$('selection').hidden=true;
-  $('status').textContent=`模型已就绪 · v12.4 · ${width} mm`;
+  $('status').textContent=`v13 · ${MASTER_LAYOUTS[layout].label} · ${width} mm`;
   window.MODEL_READY=true;window.MODEL_MESHES=meshCount;
-  try{localStorage.setItem('home3d.fridge-width.v1',String(width));}catch{}
+  try{localStorage.setItem('home3d.fridge-width.v1',String(width));localStorage.setItem('home3d.master-layout.v1',layout);}catch{}
  }catch(e){
   $('config-status').textContent=`${width} mm 加载失败，${model?'已保留原配置。':'请检查网络。'}`;
   $('fridge-width').value=String(activeWidth);$('config-retry').hidden=false;
+  describeLayout();
   if(model)$('loading').hidden=true;
   else{$('loading').classList.add('failed');$('loading-text').textContent='模型加载失败，请在冰箱配置中点击重试。';}
  }finally{
   $('fridge-width').disabled=false;$('walk-start').disabled=!model;$('download').disabled=!model;
+  layoutDisabled(false);
  }
 }
-let savedWidth=700;try{const stored=Number(localStorage.getItem('home3d.fridge-width.v1'));if(kitchenOptions[stored])savedWidth=stored;}catch{}
-$('fridge-width').value=String(savedWidth);loadModel(savedWidth);
+let savedWidth=700,savedLayout='current';try{const stored=Number(localStorage.getItem('home3d.fridge-width.v1'));if(kitchenOptions[stored])savedWidth=stored;const layout=localStorage.getItem('home3d.master-layout.v1');if(Object.hasOwn(MASTER_LAYOUTS,layout))savedLayout=layout;}catch{}
+$('fridge-width').value=String(savedWidth);loadModel(savedWidth,savedLayout);
 $('fridge-width').addEventListener('change',e=>loadModel(e.target.value));
-$('config-retry').addEventListener('click',()=>loadModel(retryWidth));
+$('master-layout').addEventListener('change',e=>loadModel(activeWidth,e.target.value));
+document.querySelectorAll('[data-master-layout]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.masterLayout!==activeLayout)loadModel(activeWidth,b.dataset.masterLayout);}));
+$('config-retry').addEventListener('click',()=>loadModel(retryWidth,retryLayout));
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
 for(const id of ['cut','roof','furniture','cad','internals','usage'])$(id).addEventListener('change',updateLayers);
 for(const id of ['pipes','walk-pipes'])$(id).addEventListener('change',()=>{const on=$(id).checked;$('pipes').checked=on;$('walk-pipes').checked=on;updateLayers();});
 $('reset').addEventListener('click',()=>setView(current));
 $('capture').addEventListener('click',()=>{renderer.render(scene,camera);const a=document.createElement('a');a.download='全屋_'+(walk?.active?'第一人称漫游':views[current].title)+'.png';a.href=renderer.domElement.toDataURL('image/png');a.click()});
-$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=modelBytes;const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_冰箱${activeWidth}mm.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+$('download').addEventListener('click',()=>{if(!modelBytes)return;const bytes=modelBytes;const url=URL.createObjectURL(new Blob([bytes],{type:'model/gltf-binary'}));const a=document.createElement('a');a.href=url;a.download=`全屋_${activeLayout==='inset'?'主卧门内移':'当前方案'}_冰箱${activeWidth}mm.glb`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
 $('info').addEventListener('click',()=>{walk?.pause();$('details').showModal()});$('close-info').addEventListener('click',()=>$('details').close());
 walk=createWalkthrough({camera,canvas:renderer.domElement,nav:navigation,host,
  onEnter(){
   const saved={position:camera.position.clone(),target:controls.target.clone(),fov:camera.fov,layers:{}};
   move=null;controls.enabled=false;$('fridge-width').disabled=true;
+  layoutDisabled(true);$('door-comparison').hidden=true;
   for(const id of ['cut','roof','furniture','cad','internals','usage']){saved.layers[id]=$(id).checked;$(id).disabled=true;}
   $('cut').checked=false;$('roof').checked=true;$('furniture').checked=true;$('cad').checked=false;$('internals').checked=false;$('usage').checked=false;updateLayers();
   $('view-title').textContent='第一人称漫游';$('view-note').textContent='从入户出发，用 WASD 行走。拖动画面转头，或启用鼠标自由转头。';
@@ -183,6 +213,7 @@ walk=createWalkthrough({camera,canvas:renderer.domElement,nav:navigation,host,
  },
  onExit(saved){
   $('fridge-width').disabled=false;controls.enabled=true;camera.position.copy(saved.position);controls.target.copy(saved.target);camera.fov=saved.fov;camera.updateProjectionMatrix();
+  layoutDisabled(false);$('door-comparison').hidden=current!=='masterdoor';
   for(const [id,value]of Object.entries(saved.layers)){$(id).checked=value;$(id).disabled=false;}updateLayers();
   $('view-title').textContent=views[current].title;$('view-note').textContent=views[current].note;
  }

@@ -32,7 +32,7 @@ def read_meshes(path):
         if 'mesh'not in n:continue
         cat=n.get('extras',{}).get('category')
         if cat not in ('WallsLow','WallsUpper','Doors','Windows','Furniture','Storage','ServiceEnclosures'):continue
-        if cat in ('Furniture','Storage') and not n['name'].startswith(('储物间柜门顶封','装饰隔断实墙')):continue
+        if cat in ('Furniture','Storage') and not n['name'].startswith(('储物间柜门顶封','储物间封闭柜门','装饰隔断实墙','过道浅柜')):continue
         mat=world(i);vertices=[];polys=[]
         for p in g['meshes'][n['mesh']]['primitives']:
             v=ac(p['attributes']['POSITION']);v=v@mat[:3,:3].T+mat[:3,3];v=v[:,[0,2,1]];v[:,1]*=-1;vertices.extend(v)
@@ -43,11 +43,17 @@ def read_meshes(path):
     return result
 
 
-def check(model):
-    manifest=json.loads((ROOT/'architecture.json').read_text());cad=json.loads((ROOT/'current-geometry.json').read_text());rows=read_meshes(model);records=wall_records(ROOT)
+def check(model,master_layout='current'):
+    manifest=json.loads((ROOT/'architecture.json').read_text());cad=json.loads((ROOT/'current-geometry.json').read_text());rows=read_meshes(model);records=wall_records(ROOT,master_layout)
+    changed_zone=Polygon()
+    if master_layout=='inset':
+        moved={'主卧门上过梁','主卧门手工侧封墙','主卧入口折墙'}
+        changed_zone=unary_union([Polygon(w['p'])for w in wall_records(ROOT)+records if w['name']in moved]).buffer(.002)
+        for d in manifest['doors']:
+            if d['id']=='master':d['b'][0]+=.67;d['b'][1]+=.67
     def actual(z,closure=False):
         return unary_union([o['footprint'] for o in rows if o['lo'][2]<z<o['hi'][2] and (o['category']in ('WallsLow','WallsUpper') or closure and o['name'].startswith('储物间柜门顶封'))])
-    result={'model':Path(model).name,'wall_regions':len(manifest['walls']),'cad_hatch_paths':sum(len(h['paths'])for h in cad['hatches']if h['pattern']=='SOLID'),'doors':[],'windows':[],'slices':[],'cad_wall_lines':[]}
+    result={'model':Path(model).name,'wall_regions':len(manifest['walls']),'cad_hatch_paths':sum(len(h['paths'])for h in cad['hatches']if h['pattern']=='SOLID'),'doors':[],'windows':[],'slices':[],'cad_wall_lines':[],'master_layout':master_layout,'relocated_cad_lines':[]}
     # Multiple elevations distinguish real door/window voids from missing full-height walls.
     for z in [.02,.50,1.60,2.10,2.31,2.42,2.60,2.71]:
         expected=unary_union([Polygon(w['p']).buffer(0)for w in records if w['z1']<z<w['z2']]);built=actual(z)
@@ -58,6 +64,9 @@ def check(model):
         if not ('COMM-WALL'in a['layer'] or i in manifest['wall_outline_line_ids']) or i in (862,863,864):continue
         line=LineString([[x/1000,y/1000]for x,y in a['p']])
         if line.length<.001:continue
+        if master_layout=='inset' and line.intersection(changed_zone).length>.001:
+            result['relocated_cad_lines'].append(i);line=line.difference(changed_zone)
+            if line.length<.001:continue
         coverage=unary_union([actual(1.6),*[o['footprint']for o in rows if o['category']=='ServiceEnclosures']])
         gap=line.difference(coverage.buffer(.001))
         result['cad_wall_lines'].append(dict(id=i,uncovered_mm=round(gap.length*1000,2)))
@@ -90,9 +99,15 @@ def check(model):
     room_ids=[v[0]for v in result['closed_room_regions'].values()if len(v)==1]
     result['room_enclosure_passed']=len(regions)==len(room_ids)==len(set(room_ids))==6 and result['exterior_leak_mm']<1
     result['passed']=result['room_enclosure_passed'] and all(s['missing_mm2']<5 and s['extra_mm2']<5 for s in result['slices']) and all(l['uncovered_mm']<1 for l in result['cad_wall_lines']) and all(d['blocked_mm2']<5 and d['head_gap_mm2']<5 and d.get('leaf_wall_overlap_mm2',0)<5 for d in result['doors']) and all(max(d['blocked_mm2'],d['sill_gap_mm2'],d['head_gap_mm2'])<5 for d in result['windows'])
+    if master_layout=='inset':
+        door=[o for o in rows if o['name'].startswith('主卧玻璃门边框')]
+        store=[o for o in rows if o['name'].startswith('储物间封闭柜门')]
+        front=min(o['lo'][0]for o in door);reference=min(o['lo'][0]for o in store)
+        result['aligned_front_x_mm']=round(front*1000,2);result['front_difference_mm']=round(abs(front-reference)*1000,3)
+        result['passed']=bool(result['passed'] and abs(front-reference)<.0005)
     return result
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--model',default=str(ROOT/'home-model.glb'));p.add_argument('--output',required=True);p.add_argument('--baseline',action='store_true');a=p.parse_args()
-    report=check(a.model);Path(a.output).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n');print(json.dumps(report,ensure_ascii=False,indent=2))
+    p=argparse.ArgumentParser();p.add_argument('--model',default=str(ROOT/'home-model.glb'));p.add_argument('--output',required=True);p.add_argument('--baseline',action='store_true');p.add_argument('--master-layout',choices=['current','inset'],default='current');a=p.parse_args()
+    report=check(a.model,a.master_layout);Path(a.output).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n');print(json.dumps(report,ensure_ascii=False,indent=2))
     if not a.baseline:assert report['passed'],'CAD wall / opening audit failed; see report'

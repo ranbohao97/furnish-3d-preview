@@ -44,6 +44,7 @@ def apply_living_palette(bpy):
         if n.startswith('手工小吊柜'):key='sage' if '柜门'in n or '侧板'in n else 'wood'
         if n.startswith(('手工线轴架层板','手工桌桌面','手工桌背挡','手工桌侧腿','手工桌工具挂板')):key='wood'
         if n.startswith(('储物间封闭柜门','储物间柜门框')):key='cream'
+        if n.startswith('过道浅柜'):key='cream'
         if cat=='Doors' and n.startswith(('主卧双门门套','主卧双门上门套','主卧玻璃门边框','主卧玻璃门横框','主卧双门中缝盖条')):key='ink'
         if cat=='Doors' and n.startswith('次卧门'):key='wood'
         if cat=='Doors' and n.startswith('客卫平开门'):key='cream'

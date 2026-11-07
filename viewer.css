@@ -8,3 +8,5 @@
 /* A small opaque title surface keeps labels legible against both daylight and dusk. */
 .stage-heading{background:#fffef3e8;border:1px solid #ffffff80;border-radius:9px;padding:13px 16px;backdrop-filter:blur(12px)}.stage-heading h2,.stage-heading .eyebrow{text-shadow:none}.view-description summary{background:none;padding:0;color:#6d7d68}.view-description[open]{padding:0;border:0;background:none;backdrop-filter:none}.settings-info{width:100%;margin-top:24px;font-size:11px}
 @media(max-width:560px){.stage-heading{padding:10px 12px;border-radius:7px}.stage-heading h2{font-size:16px}}
+
+#door-comparison{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;pointer-events:auto}#door-comparison[hidden]{display:none}#door-comparison .plain{padding:8px 10px;font-size:11px}#door-comparison button[aria-pressed="true"]{background:#40574a;color:white;border-color:#40574a}#master-layout{width:100%;padding:11px;border:1px solid #deded4;border-radius:5px;background:#fff;color:inherit;font:inherit}

@@ -3,6 +3,27 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 import {isWalkable,moveOnGrid,movementVector,navigationMode} from './navigation.js';
+import {modelChoice} from './model-options.js';
+for(const width of [600,700,800]){
+ test(`${width} mm: both door schemes load matching model/navigation files`,()=>{
+  for(const layout of ['current','inset']){
+   const option=modelChoice(width,layout);
+   const n=JSON.parse(fs.readFileSync(new URL(option.navigation,import.meta.url)));
+   assert.equal(n.model_sha256,createHash('sha256').update(fs.readFileSync(new URL(option.model,import.meta.url))).digest('hex'));
+  }
+ });
+ test(`${width} mm: inset entrance frees the old return and connects the new door to all rooms`,()=>{
+  const n=JSON.parse(fs.readFileSync(new URL(`./navigation-inset-${width}.json`,import.meta.url))),free=navigationMode(n,true);
+  assert.ok(isWalkable(free,5.90,7.05),'old projecting craft return is removed');
+  assert.ok(isWalkable(free,5.60,5.70),'old folded jamb is removed');
+  assert.equal(isWalkable(free,6.28,7.05),false,'new craft-side return is sealed');
+  assert.equal(isWalkable(free,6.28,5.70),false,'new south jamb is sealed');
+  assert.ok(isWalkable(free,6.28,6.44),'new 1100 mm master doorway is passable');
+  const start=n.starts.living,q=[[Math.floor(start.x/n.step),Math.floor(start.y/n.step)]],seen=new Set(q.map(([x,y])=>`${x},${y}`));
+  for(let i=0;i<q.length;i++){const [x,y]=q[i];for(const [dx,dy]of [[1,0],[-1,0],[0,1],[0,-1]]){const a=x+dx,b=y+dy,k=`${a},${b}`;if(!seen.has(k)&&isWalkable(free,(a+.5)*n.step,(b+.5)*n.step)){seen.add(k);q.push([a,b]);}}}
+  for(const [name,p]of Object.entries(n.starts))assert.ok(seen.has(`${Math.floor(p.x/n.step)},${Math.floor(p.y/n.step)}`),name);
+ });
+}
 const nav=JSON.parse(fs.readFileSync(new URL('./navigation.json',import.meta.url)));
 for(const width of [600,700,800])test(`${width} mm: craft-side master return is closed while the doorway remains passable`,()=>{
  const file=width===700?'./navigation.json':`./navigation-${width}.json`;

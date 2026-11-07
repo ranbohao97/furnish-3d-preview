@@ -2,10 +2,16 @@
 import json
 
 
-def wall_records(root):
+def wall_records(root, master_layout='current'):
     manifest=json.loads((root/'architecture.json').read_text())
     geom=json.loads((root/'current-geometry.json').read_text())
     solids=list(manifest['walls'])
+    if master_layout=='inset':
+        for w in solids:
+            if w['name']=='主卧门上过梁':w['p']=[[x+.67,y]for x,y in w['p']]
+            elif w['name']=='主卧门手工侧封墙':w['p']=[[6.21,6.99],[6.50,6.99],[6.50,7.11],[6.21,7.11]]
+            elif w['name']=='主卧入口折墙':w['p']=[[7.93,5.17],[7.93,5.29],[6.38,5.29],[6.38,5.89],[6.21,5.89],[6.21,5.17]]
+    elif master_layout!='current':raise ValueError(master_layout)
     for i,h in enumerate(geom['hatches']):
         if h['pattern']!='SOLID':continue
         for j,p in enumerate(h['paths']):
@@ -19,12 +25,12 @@ def wall_records(root):
     return result
 
 
-def rebuild_shell(api):
+def rebuild_shell(api, master_layout='current'):
     """Replace the entire shell so corrections can remove excess wall as well."""
     bpy=api['bpy']
     for o in list(bpy.data.objects):
         if o.get('category')in ('WallsLow','WallsUpper'):bpy.data.objects.remove(o,do_unlink=True)
-    api['WALLS']=wall_records(api['ROOT'])
+    api['WALLS']=wall_records(api['ROOT'],master_layout)
     api['CUT']=1.10
     api['merge_walls']()
     api['scene']['Architecture_revision']='v12.3 / CAD walls and opening audit'

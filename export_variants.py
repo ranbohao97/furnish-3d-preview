@@ -20,6 +20,7 @@ for n in source.body:
 material_map.update(glass='透明玻璃',lamp='乳白发光灯罩')
 for width in (700,600,800):
  bpy.ops.wm.open_mainfile(filepath=str(base));COL={c.name:c for c in bpy.data.collections};M={k:bpy.data.materials[v]for k,v in material_map.items() if v in bpy.data.materials};scene=bpy.context.scene
+ if scene.get('Master_door_layout')=='inset':raise ValueError('Use a current-layout base for export_variants; use export_master_inset for the alternative.')
  exec(compile(ast.Module(body=helpers,type_ignores=[]),'build_model_helpers','exec'),globals())
  for o in list(bpy.data.objects):
   if o.name.startswith(('扫地机','窗侧钢台面','冰箱旁窄高柜','法式冰箱')):bpy.data.objects.remove(o,do_unlink=True)

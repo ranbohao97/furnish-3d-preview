@@ -13,6 +13,7 @@ from revised_interior import build_entry, build_detail, finish_revision, finish_
 from construction_details import finish_construction
 from architecture import wall_records, finish_door_frames
 from living_palette import apply_living_palette
+from master_door_layout import apply_master_inset
 KITCHEN=layout(int(os.environ.get('FRIDGE_WIDTH_MM','700')))
 D=json.loads((ROOT/'model-data.json').read_text())
 random.seed(603)
@@ -622,6 +623,9 @@ finish_layout(globals())
 finish_door_frames(globals())
 finish_construction(globals())
 apply_living_palette(bpy)
+MASTER_LAYOUT=os.environ.get('MASTER_DOOR_LAYOUT','current')
+if MASTER_LAYOUT=='inset':apply_master_inset(globals())
+elif MASTER_LAYOUT!='current':raise ValueError(MASTER_LAYOUT)
 
 # Lighting and named cameras. Full model is exported before display hiding.
 world=bpy.data.worlds.new('Warm daylight');world.use_nodes=True;world.node_tree.nodes['Background'].inputs[0].default_value=(.78,.84,.90,1);world.node_tree.nodes['Background'].inputs[1].default_value=.45;scene.world=world
@@ -667,7 +671,7 @@ scene.view_settings.view_transform='AgX'
 scene.view_settings.look='AgX - Medium High Contrast';scene.view_settings.exposure=.4
 scene.render.image_settings.color_mode='RGB';scene.camera=CAMS['01_全屋轴测']
 # Root custom properties keep assumptions alongside the geometry.
-scene['Project']='新版CAD与设计师白模重建 v12.4 / 客厅中古包豪斯与阿尔托配色'
+scene['Project']='全屋 v13 / 主卧门双方案 / '+MASTER_LAYOUT
 scene['CAD_source']=D['source_dwg'];scene['Style_source']=D['style_source'];scene['Style_revision']=2312
 scene['Height_note']='Raw clear height 2.820m; provisional floor build-up 0.100m; model clear height 2.720m.'
 scene['Balcony_beam_note']='Original opening MH=2060mm; model underside 1960mm above provisional finished floor.'
@@ -682,7 +686,7 @@ curves=[o for o in bpy.data.objects if o.type=='CURVE']
 for o in curves:o.select_set(True)
 if curves:
     bpy.context.view_layer.objects.active=curves[0];bpy.ops.object.convert(target='MESH')
-bpy.ops.export_scene.gltf(filepath=str(ROOT/os.environ.get('MODEL_FILENAME','home-model.glb')),export_format='GLB',export_extras=True,export_cameras=False,export_lights=False,export_apply=True,export_yup=True)
+bpy.ops.export_scene.gltf(filepath=str(ROOT/os.environ.get('MODEL_FILENAME',f'home-model-inset-{KITCHEN["width_mm"]}.glb' if MASTER_LAYOUT=='inset' else 'home-model.glb')),export_format='GLB',export_extras=True,export_cameras=False,export_lights=False,export_apply=True,export_yup=True)
 print('MODEL_SAVED',len(bpy.data.objects),flush=True)
 render_views=os.environ.get('MODEL_RENDER_VIEWS','01_全屋轴测,06_全屋俯视,02_客厅与双人工位,03_餐厨,04_主卧,05_次卧,07_主卫,08_玄关通顶柜,09_方形洗手台,10_玄关柜内分区,11_65英寸电视支架').split(',')
 for name in filter(None,render_views):
