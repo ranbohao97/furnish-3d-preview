@@ -10,3 +10,5 @@
 @media(max-width:560px){.stage-heading{padding:10px 12px;border-radius:7px}.stage-heading h2{font-size:16px}}
 
 #door-comparison{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;pointer-events:auto}#door-comparison[hidden]{display:none}#door-comparison .plain{padding:8px 10px;font-size:11px}#door-comparison button[aria-pressed="true"]{background:#40574a;color:white;border-color:#40574a}#master-layout{width:100%;padding:11px;border:1px solid #deded4;border-radius:5px;background:#fff;color:inherit;font:inherit}
+
+#walk-config-dialog{width:min(390px,calc(100vw - 56px));box-sizing:border-box}#walk-config-dialog h3{font-size:21px}.walk-config-fields{display:grid;gap:8px}.walk-config-fields label{font-size:12px;margin-top:6px}.walk-config-fields select{width:100%;min-height:42px;border:1px solid var(--line);border-radius:6px;padding:9px;background:var(--panel);color:var(--ink)}.walk-config-actions{display:flex;justify-content:flex-end;gap:8px}#walk-config-status{min-height:46px}
